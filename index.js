@@ -89,11 +89,11 @@ mongoose
     console.log("Database is not connected");
   });
 
-  // const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 5000;
 
-// app.listen(process.env.PORT || 5000, () => {
-//   console.log(`listening on port ${PORT}`);
-// });
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`listening on port ${PORT}`);
+});
 
 
 
