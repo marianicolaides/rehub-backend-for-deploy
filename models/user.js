@@ -1,0 +1,36 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const userSchema = new mongoose.Schema(
+  {
+    accountType: {
+      type: String,
+      enum: ["Therapist", "TherapistHub"],
+    },
+    signInType: {
+      type: String,
+      enum: ["App", "Google", "Facebook"],
+      // default: "App",
+    },
+    username: String,
+    password: String,
+    email: String,
+    image: String,
+    uniqueId:String
+  },
+  {
+    timestamps: true,
+  }
+);
+
+userSchema.method("encryptPassword", async (password) => {
+  let encryptPassword = await bcrypt.hash(password, 10);
+  return encryptPassword;
+});
+userSchema.method("comparePassword", async (password, hashPassword) => {
+  let isEqual = await bcrypt.compare(password, hashPassword);
+  return isEqual;
+});
+
+const User = mongoose.model("user", userSchema);
+
+module.exports.User = User;
