@@ -46,7 +46,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ errorMessage: "Password is incorrect" });
 
     switch (user.accountType) {
-      case "Therapist":
+      case "Professional":
         person = await Therapist.findOne({ user: user._id })
           .populate({
             path: "user",
@@ -55,7 +55,7 @@ router.post("/login", async (req, res) => {
           .lean();
 
         break;
-      case "TherapistHub":
+      case "Host":
         person = await TherapistHub.findOne({ user: user._id })
           .populate({
             path: "user",
