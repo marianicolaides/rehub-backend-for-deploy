@@ -97,7 +97,7 @@ router.post("/signup", async (req, res) => {
     let person;
 
     switch (accountType) {
-      case "Therapist":
+      case "Professional":
         person = await Therapist.create({
           firstName: name[0],
           lastName: name[1],
@@ -105,7 +105,7 @@ router.post("/signup", async (req, res) => {
         });
         console.log("Therapist ===", Therapist);
         break;
-      case "TherapistHub":
+      case "Host":
         person = await TherapistHub.create({
           firstName: name[0],
           lastName: name[1],

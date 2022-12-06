@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema(
   {
     accountType: {
       type: String,
-      enum: ["Therapist", "TherapistHub"],
+      enum: ["Professional", "Host"],
     },
     signInType: {
       type: String,
