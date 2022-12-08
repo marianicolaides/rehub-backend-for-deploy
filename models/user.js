@@ -15,7 +15,8 @@ const userSchema = new mongoose.Schema(
     password: String,
     email: String,
     image: String,
-    uniqueId:String
+    uniqueId:String,
+   
   },
   {
     timestamps: true,

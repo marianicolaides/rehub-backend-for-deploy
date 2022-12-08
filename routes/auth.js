@@ -131,13 +131,13 @@ router.get("/user", authorizedUser, async (req, res) => {
   let person;
   console.log("authorizedUser", authorizedUser);
   switch (authorizedUser?.user?.accountType) {
-    case "Therapist":
+    case "Professional":
       person = await Therapist.findOne({ user: authorizedUser.user._id })
         .populate({ path: "user", select: "accountType email image createdAt" })
         .lean();
 
       break;
-    case "TherapistHub":
+    case "Host":
       person = await TherapistHub.findOne({ user: authorizedUser.user._id })
         .populate({ path: "user", select: "accountType email image createdAt" })
         .lean();
@@ -174,7 +174,7 @@ router.post("/google/signup", async (req, res) => {
     let person;
     if (user) {
       switch (user.accountType) {
-        case "Therapist":
+        case "Professional":
           person = await Therapist.findOne({ user: user._id })
             .populate({
               path: "user",
@@ -183,7 +183,7 @@ router.post("/google/signup", async (req, res) => {
             .lean();
 
           break;
-        case "TherapistHub":
+        case "Host":
           person = await TherapistHub.findOne({ user: user._id })
             .populate({
               path: "user",
@@ -207,7 +207,7 @@ router.post("/google/signup", async (req, res) => {
       });
 
       switch (accountType) {
-        case "Therapist":
+        case "Professional":
           await Therapist.create({
             firstName: name[0],
             lastName: name[1],
@@ -221,7 +221,7 @@ router.post("/google/signup", async (req, res) => {
             .lean();
 
           break;
-        case "TherapistHub":
+        case "Host":
           await TherapistHub.create({
             firstName: name[0],
             lastName: name[1],
@@ -276,7 +276,7 @@ router.post("/google/login", async (req, res) => {
     let person;
 
     switch (user.accountType) {
-      case "Therapist":
+      case "Professional":
         person = await Therapist.findOne({ user: user._id })
           .populate({
             path: "user",
@@ -285,7 +285,7 @@ router.post("/google/login", async (req, res) => {
           .lean();
 
         break;
-      case "TherapistHub":
+      case "Host":
         person = await TherapistHub.findOne({ user: user._id })
           .populate({
             path: "user",
@@ -459,13 +459,13 @@ const facebookLogin1 = async (req, res) => {
     let person = {};
     if (user) {
       switch (user.accountType) {
-        case "Therapist":
+        case "Professional":
           person = await Therapist.findOne({ user: user._id })
             .populate({ path: "user", select: "accountType email" })
             .lean();
 
           break;
-        case "TherapistHub":
+        case "Host":
           person = await TherapistHub.findOne({ user: user._id })
             .populate({ path: "user", select: "accountType email" })
             .lean();
@@ -485,7 +485,7 @@ const facebookLogin1 = async (req, res) => {
       });
 
       switch (accountType) {
-        case "Therapist":
+        case "Professional":
           await Therapist.create({
             firstName: fullname[0],
             lastName: fullname[1],
@@ -496,7 +496,7 @@ const facebookLogin1 = async (req, res) => {
             .lean();
 
           break;
-        case "TherapistHub":
+        case "Host":
           await TherapistHub.create({
             firstName: fullname[0],
             lastName: fullname[1],
@@ -543,7 +543,7 @@ const facebookLogin = async (req, res) => {
       let person;
 
       switch (accountType) {
-        case "Therapist":
+        case "Professional":
           person = await Therapist.create({
             firstName: username[0],
             lastName: username[1],
@@ -551,7 +551,7 @@ const facebookLogin = async (req, res) => {
           });
           console.log("Therapist ===", Therapist);
           break;
-        case "TherapistHub":
+        case "Host":
           person = await TherapistHub.create({
             firstName: username[0],
             lastName: username[1],

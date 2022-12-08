@@ -6,8 +6,8 @@
     "node": "18.x"
   },
   "scripts": {
-    "start": "node index.js"
-   
+    "start": "nodemon ./bin/www",
+    "dev": "nodemon ./bin/www"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

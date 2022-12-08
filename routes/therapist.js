@@ -15,6 +15,7 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
       email,
       information,
       password,
+     
     } = req.body;
 
     await Therapist.findByIdAndUpdate(
@@ -24,6 +25,7 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
         lastName,
         phoneNumber,
         location,
+        image: `uploads/${req.file.filename}`,
         information,
       }
     );
