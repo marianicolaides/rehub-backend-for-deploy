@@ -152,7 +152,7 @@ router.get("/user", authorizedUser, async (req, res) => {
 
 router.post("/google/signup", async (req, res) => {
   try {
-    const { tokenId, accountType } = req.body;
+    const { tokenId, accountType,image } = req.body;
 
     console.log("tokenId: ", tokenId);
 
@@ -201,9 +201,10 @@ router.post("/google/signup", async (req, res) => {
       let name = payload.name.split(" ");
       let userSaved = await User.create({
         email: payload.email,
-        image: payload.picture,
+        image: image,
         signInType: "Google",
         accountType,
+        
       });
 
       switch (accountType) {
@@ -444,8 +445,9 @@ router.post("/update/singlereview", async (req, res) => {
 
 //facebook login
 const facebookLogin1 = async (req, res) => {
-  let { email, username, id, signInType, accountType } = req.body;
+  let { email, username, id, signInType, accountType,image } = req.body;
   console.log(email, username, id, signInType, accountType);
+  console.log("req.body======",req.body)
   let fullname = [];
   fullname = username?.split(" ");
 
@@ -482,6 +484,7 @@ const facebookLogin1 = async (req, res) => {
         email: email,
         signInType: signInType,
         accountType,
+        image:image
       });
 
       switch (accountType) {

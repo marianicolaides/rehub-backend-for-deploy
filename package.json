@@ -7,7 +7,6 @@
   },
   "scripts": {
     "start": "node index.js"
-   
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
