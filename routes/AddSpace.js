@@ -35,7 +35,7 @@ router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
     let data;
     let person;
     switch (user.accountType) {
-      case "Therapist":
+      case "Professional":
         person = await Therapist.findOne({ user: userId });
         data = new Space({
           name: req.body.name,
@@ -49,7 +49,7 @@ router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
         await data.save();
 
         break;
-      case "TherapistHub":
+      case "Host":
         person = await TherapistHub.findOne({ user: userId });
         console.log("person id", user, person._id);
         data = new Space({
