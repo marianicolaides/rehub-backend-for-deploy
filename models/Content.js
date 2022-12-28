@@ -27,6 +27,9 @@ const contentSchema = mongoose.Schema({
   picture3: {
     type: String,
   },
+  platFormFee:{
+    type:Number
+  }
 });
 
 // module.exports = mongoose.model("content", contentSchema);

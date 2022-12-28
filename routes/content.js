@@ -49,11 +49,9 @@ router.post("/create", uploadMultiple, async function (req, res) {
     const urlSecond = `uploads/${req.files.picture2[0].filename}`;
     const urlthird = `uploads/${req.files.picture3[0].filename}`;
 
-    console.log("urlOne",urlOne)
-    console.log("urlSecond",urlOne)
-    console.log("urlthird",urlthird)
-
-
+    console.log("urlOne", urlOne);
+    console.log("urlSecond", urlOne);
+    console.log("urlthird", urlthird);
 
     let data = new content({
       paragraph1: req.body.paragraph1,
@@ -65,11 +63,12 @@ router.post("/create", uploadMultiple, async function (req, res) {
 
       picture2: urlSecond,
       picture3: urlthird,
+      platFormFee: req.body.platFormFee,
     });
     console.log("sssss", data);
 
     await data.save();
-    console.log("datadata",data)
+    console.log("datadata", data);
     res.status(200).json({
       status: true,
       message: "Content Added Successfully",
@@ -82,89 +81,101 @@ router.post("/create", uploadMultiple, async function (req, res) {
   }
 });
 
-
 ///edit Content
 
-router.post(
-    "/updateContent/:id",
-    uploadMultiple,
-    async (req, res) => {
+router.post("/updateContent/:id", uploadMultiple, async (req, res) => {
+  try {
+    const {
+      paragraph1,
+      paragraph2,
+      paragraph3,
+      primaryColor,
+      secondaryColor,
+      picture1,
+      picture2,
+      picture3,
+      platFormFee,
+    } = req.body;
 
+    console.log("req.filesreq.filesreq.files", req.files);
 
-      try {
+    console.log("req.paramsreq.params", req.params);
+    console.log("req.bodyreq.bodyreq.bodyreq.body", req.body);
 
-   
-    const {paragraph1,paragraph2,paragraph3,primaryColor,secondaryColor,picture1,picture2,picture3} = req.body;
+    const { id } = req.params;
 
-    console.log("req.filesreq.filesreq.files",req.files);
+    // if (req.files) {
+    const checkSpaceExist = await content.findOne({ _id: id });
+    console.log("checkSpaceExist checkSpaceExist", checkSpaceExist);
 
-    console.log("req.paramsreq.params",req.params);
-    console.log("req.bodyreq.bodyreq.bodyreq.body",req.body);
+    const urlOne = req.files.picture1
+      ? `uploads/${req.files.picture1[0].filename}`
+      : checkSpaceExist?.picture1;
+    const urlSecond = req.files.picture2
+      ? `uploads/${req.files.picture2[0].filename}`
+      : checkSpaceExist?.picture2;
+    const urlthird = req.files.picture3
+      ? `uploads/${req.files.picture3[0].filename}`
+      : checkSpaceExist?.picture3;
+    console.log("urlOne", urlOne);
+    console.log("urlSecond", urlOne);
+    console.log("urlthird", urlthird);
 
-        const { id } = req.params;
- 
-        // if (req.files) {
-            const checkSpaceExist = await content.findOne({ _id: id });
-            console.log("checkSpaceExist checkSpaceExist",checkSpaceExist)
+    console.log("sssss", urlSecond, urlOne, urlthird);
 
-            const urlOne = req.files.picture1 ? `uploads/${req.files.picture1[0].filename}`: checkSpaceExist?.picture1;
-            const urlSecond = req.files.picture2 ? `uploads/${req.files.picture2[0].filename}`: checkSpaceExist?.picture2;
-            const urlthird = req.files.picture3 ? `uploads/${req.files.picture3[0].filename}`: checkSpaceExist?.picture3;
-            console.log("urlOne",urlOne)
-            console.log("urlSecond",urlOne)
-            console.log("urlthird",urlthird)
+    const updatespace = await content.findByIdAndUpdate(
+      { _id: id },
+      {
+        paragraph1: paragraph1 ? paragraph1 : checkSpaceExist.paragraph1,
+        paragraph2: paragraph2 ? paragraph2 : checkSpaceExist.paragraph2,
+        paragraph3: paragraph3 ? paragraph3 : checkSpaceExist.paragraph3,
+        primaryColor: primaryColor
+          ? primaryColor
+          : checkSpaceExist.primaryColor,
+        secondaryColor: secondaryColor
+          ? secondaryColor
+          : checkSpaceExist.secondaryColor,
+        picture1: urlOne,
 
-            console.log("sssss",urlSecond,urlOne,urlthird);
-         
-          const updatespace = await content.findByIdAndUpdate(
-            { _id: id },
-            {
-                paragraph1:paragraph1 ? paragraph1 : checkSpaceExist.paragraph1,
-                paragraph2: paragraph2 ? paragraph2 : checkSpaceExist.paragraph2,
-                paragraph3:paragraph3 ? paragraph3 : checkSpaceExist.paragraph3,
-                primaryColor:primaryColor ? primaryColor : checkSpaceExist.primaryColor,
-                secondaryColor: secondaryColor ? secondaryColor : checkSpaceExist.secondaryColor,
-                picture1: urlOne,
-          
-                picture2: urlSecond,
-                picture3: urlthird,
-            },
-            {
-              new: true,
-            }
-          );
-  
-          await updatespace.save();
-console.log("updatespace updatespaceupdatespace",updatespace)
-        // } else {
-
-        //     console.log("dd else")
-
-        //   const updatespace = await content.findByIdAndUpdate(
-        //     { _id: id },
-        //     {
-        //         paragraph1: req.body.paragraph1,
-        //         paragraph2: req.body.paragraph2,
-        //         paragraph3: req.body.paragraph3,
-        //         primaryColor: req.body.primaryColor,
-        //         secondaryColor: req.body.secondaryColor,
-        //         picture1: urlOne,
-          
-        //         picture2: urlSecond,
-        //         picture3: urlthird,
-        //     },
-        //     {
-        //       new: true,
-        //     }
-        //   );
-        //   await updatespace.save();
-        // }
-        res.status(201).json({ message: "update Sucessfully" });
-      } catch (error) {
-        res.status(422).json({ error, message: "Server error at update space" });
+        picture2: urlSecond,
+        picture3: urlthird,
+        platFormFee: platFormFee ? platFormFee : checkSpaceExist.platFormFee,
+      },
+      {
+        new: true,
       }
-    }
-  );
+    );
+
+    await updatespace.save();
+    console.log("updatespace updatespaceupdatespace", updatespace);
+    // } else {
+
+    //     console.log("dd else")
+
+    //   const updatespace = await content.findByIdAndUpdate(
+    //     { _id: id },
+    //     {
+    //         paragraph1: req.body.paragraph1,
+    //         paragraph2: req.body.paragraph2,
+    //         paragraph3: req.body.paragraph3,
+    //         primaryColor: req.body.primaryColor,
+    //         secondaryColor: req.body.secondaryColor,
+    //         picture1: urlOne,
+
+    //         picture2: urlSecond,
+    //         picture3: urlthird,
+    //     },
+    //     {
+    //       new: true,
+    //     }
+    //   );
+    //   await updatespace.save();
+    // }
+    res.status(201).json({ message: "update Sucessfully" });
+  } catch (error) {
+    res.status(422).json({ error, message: "Server error at update space" });
+  }
+});
 
 router.get("/find", async function (req, res) {
   try {
