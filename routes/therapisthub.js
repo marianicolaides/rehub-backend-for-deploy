@@ -14,7 +14,7 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
       location,
       email,
       information,
-      password,
+      // password,
     } = req.body;
 
     await TherapistHub.findByIdAndUpdate(
@@ -29,12 +29,13 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
     );
     let user = await User.findByIdAndUpdate(
       { _id: authorizedUser.user._id },
-      { email }
+      { firstName, lastName, phoneNumber, location, information, email }
     );
-    if (password !== "") {
-      user.password = await user.encryptPassword(password);
-      await user.save();
-    }
+    await user.save();
+    // if (password !== "") {
+    //   user.password = await user.encryptPassword(password);
+
+    // }
 
     res.status(200).send("Changes saved successfully");
   } catch (error) {
