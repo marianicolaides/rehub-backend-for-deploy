@@ -3,6 +3,29 @@ const { authorizedUser } = require("../middleware/Authorized");
 const { Therapist } = require("../models/therapist");
 const { User } = require("../models/user");
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.fieldname + "_" + Date.now() + path.extname(file.originalname)
+    );
+  },
+});
+
+const upload = multer({
+  storage: storage,
+});
+
+
+
+
+
 
 router.patch("/update/profile", authorizedUser, async (req, res) => {
   try {
@@ -15,6 +38,7 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
       email,
       information,
       password,
+      // topImg
      
     } = req.body;
 
@@ -25,13 +49,13 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
         lastName,
         phoneNumber,
         location,
-        image: `uploads/${req.file.filename}`,
         information,
+        // topImg: `uploads/${req.files.top[0].filename}`
       }
     );
     let user = await User.findByIdAndUpdate(
       { _id: authorizedUser.user._id },
-      { email }
+      { firstName, lastName, phoneNumber, location, information, email}
     );
     if (password !== "") {
       user.password = await user.encryptPassword(password);

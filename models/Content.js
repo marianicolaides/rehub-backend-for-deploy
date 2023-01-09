@@ -29,7 +29,16 @@ const contentSchema = mongoose.Schema({
   },
   platFormFee:{
     type:Number
-  }
+  },
+  link1: {
+    type: String,
+  },
+  link2: {
+    type: String,
+  },
+  link3: {
+    type: String,
+  },
 });
 
 // module.exports = mongoose.model("content", contentSchema);

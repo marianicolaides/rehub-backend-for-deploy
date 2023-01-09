@@ -64,6 +64,9 @@ router.post("/create", uploadMultiple, async function (req, res) {
       picture2: urlSecond,
       picture3: urlthird,
       platFormFee: req.body.platFormFee,
+      link1: req.body.link1,
+      link2: req.body.link2,
+      link3: req.body.link3,
     });
     console.log("sssss", data);
 
@@ -95,6 +98,10 @@ router.post("/updateContent/:id", uploadMultiple, async (req, res) => {
       picture2,
       picture3,
       platFormFee,
+
+      link1,
+      link2,
+      link3,
     } = req.body;
 
     console.log("req.filesreq.filesreq.files", req.files);
@@ -140,6 +147,10 @@ router.post("/updateContent/:id", uploadMultiple, async (req, res) => {
         picture2: urlSecond,
         picture3: urlthird,
         platFormFee: platFormFee ? platFormFee : checkSpaceExist.platFormFee,
+        link1: link1 ? link1 : checkSpaceExist.link1,
+        link2: link2 ? link2 : checkSpaceExist.link2,
+
+        link3: link3 ? link3 : checkSpaceExist.link3,
       },
       {
         new: true,

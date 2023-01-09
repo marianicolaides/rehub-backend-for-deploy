@@ -6,6 +6,7 @@ const therapistSchema = new mongoose.Schema(
     phoneNumber: String,
     location: String,
     information: String,
+    // topImg:String,
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
