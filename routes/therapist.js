@@ -22,51 +22,61 @@ const upload = multer({
   storage: storage,
 });
 
+router.patch(
+  "/update/profile",
+  upload.single("image"),
+  authorizedUser,
+  async (req, res) => {
+    console.log("req",req.body)
+    console.log("req1",req.file)
 
-
-
-
-
-router.patch("/update/profile", authorizedUser, async (req, res) => {
-  try {
-    let authorizedUser = req.user;
-    let {
-      firstName,
-      lastName,
-      phoneNumber,
-      location,
-      email,
-      information,
-      password,
-      // topImg
-     
-    } = req.body;
-
-    await Therapist.findByIdAndUpdate(
-      { _id: authorizedUser._id },
-      {
+    try {
+      let authorizedUser = req.user;
+      let {
         firstName,
         lastName,
         phoneNumber,
         location,
+        email,
         information,
-        // topImg: `uploads/${req.files.top[0].filename}`
-      }
-    );
-    let user = await User.findByIdAndUpdate(
-      { _id: authorizedUser.user._id },
-      { firstName, lastName, phoneNumber, location, information, email}
-    );
-    if (password !== "") {
-      user.password = await user.encryptPassword(password);
-      await user.save();
-    }
+        password,
+      } = req.body;
 
-    res.status(200).send("Changes saved successfully");
-  } catch (error) {
-    res.status(400).json({ error, errorMessage: "Internal Server Error" });
+      await Therapist.findByIdAndUpdate(
+        { _id: authorizedUser._id },
+        {
+          firstName,
+          lastName,
+          phoneNumber,
+          location,
+          information,
+          image: `uploads/${req.file.filename}`,
+        }
+      );
+      let user = await User.findByIdAndUpdate(
+        { _id: authorizedUser.user._id },
+        {
+          firstName,
+          lastName,
+          phoneNumber,
+          location,
+          information,
+          email,
+
+          image: `uploads/${req.file.filename}`,
+        }
+      );
+      await user.save();
+      // if (password !== "") {
+      //   user.password = await user.encryptPassword(password);
+      // }
+
+      res.status(200).send("Changes saved successfully");
+    } catch (error) {
+      res.status(400).json({ error, errorMessage: "Internal Server Error" });
+    }
   }
-});
+);
 
 router.patch("/booking", authorizedUser, async (req, res) => {
   try {
