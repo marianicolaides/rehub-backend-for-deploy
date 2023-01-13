@@ -27,8 +27,8 @@ router.patch(
   upload.single("image"),
   authorizedUser,
   async (req, res) => {
-    console.log("req",req.body)
-    console.log("req1",req.file)
+    console.log("req", req.body);
+    console.log("req1", req.file);
 
     try {
       let authorizedUser = req.user;
@@ -40,6 +40,7 @@ router.patch(
         email,
         information,
         password,
+        usertype
       } = req.body;
 
       await Therapist.findByIdAndUpdate(
@@ -50,6 +51,9 @@ router.patch(
           phoneNumber,
           location,
           information,
+          password,
+          usertype,
+          
           image: `uploads/${req.file.filename}`,
         }
       );
@@ -62,14 +66,15 @@ router.patch(
           location,
           information,
           email,
-
+          password,
+          usertype,
           image: `uploads/${req.file.filename}`,
         }
       );
-      await user.save();
-      // if (password !== "") {
-      //   user.password = await user.encryptPassword(password);
-      // }
+      if (password !== "") {
+        user.password = await user.encryptPassword(password);
+        await user.save();
+      }
 
       res.status(200).send("Changes saved successfully");
     } catch (error) {

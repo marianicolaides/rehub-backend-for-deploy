@@ -79,7 +79,7 @@ router.post("/login", async (req, res) => {
 
 router.post("/signup", async (req, res) => {
   try {
-    let { name, username, password, accountType, email } = req.body;
+    let { name, username, password, accountType, email, usertype } = req.body;
     name = name.split(" ");
 
     console.log("reqSignup",req.body)
@@ -88,7 +88,7 @@ router.post("/signup", async (req, res) => {
     if (isDuplication)
       return res.status(400).send({ errorMessage: isDuplication });
 
-    let user = new User({ username, accountType, email });
+    let user = new User({ username, accountType, email,usertype:"simple" });
     user.password = await user.encryptPassword(password);
     let userSaved = await user.save();
 
@@ -101,6 +101,7 @@ router.post("/signup", async (req, res) => {
         person = await Therapist.create({
           firstName: name[0],
           lastName: name[1],
+          usertype:"simple",
           user: userSaved._id,
         });
         console.log("Therapist ===", Therapist);
@@ -109,6 +110,8 @@ router.post("/signup", async (req, res) => {
         person = await TherapistHub.create({
           firstName: name[0],
           lastName: name[1],
+          usertype:"simple",
+
           user: userSaved._id,
         });
 

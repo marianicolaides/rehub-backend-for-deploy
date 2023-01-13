@@ -6,6 +6,10 @@ const therapistSchema = new mongoose.Schema(
     phoneNumber: String,
     location: String,
     information: String,
+    password: String,
+    usertype: String,
+
+
     image:String,
     user: {
       type: mongoose.Schema.Types.ObjectId,
