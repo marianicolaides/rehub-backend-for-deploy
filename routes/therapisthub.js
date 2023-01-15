@@ -3,8 +3,28 @@ const { authorizedUser } = require("../middleware/Authorized");
 const { TherapistHub } = require("../models/therapisthub");
 const { User } = require("../models/user");
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
 
-router.patch("/update/profile", authorizedUser, async (req, res) => {
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.fieldname + "_" + Date.now() + path.extname(file.originalname)
+    );
+  },
+});
+
+const upload = multer({
+  storage: storage,
+});
+
+
+
+router.patch("/update/profile", upload.single("image"),authorizedUser, async (req, res) => {
   try {
     let authorizedUser = req.user;
     let {
@@ -15,6 +35,8 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
       email,
       information,
       password,
+      usertype
+
     } = req.body;
 
     await TherapistHub.findByIdAndUpdate(
@@ -25,11 +47,23 @@ router.patch("/update/profile", authorizedUser, async (req, res) => {
         phoneNumber,
         location,
         information,
+        email,
+        password,
+        usertype,
+        image: `uploads/${req.file.filename}`,
       }
     );
     let user = await User.findByIdAndUpdate(
       { _id: authorizedUser.user._id },
-      { firstName, lastName, phoneNumber, location, information, email }
+      { firstName,
+        lastName,
+        phoneNumber,
+        location,
+        information,
+        email,
+        password,
+        usertype,
+        image: `uploads/${req.file.filename}` }
     );
     if (password !== "") {
       user.password = await user.encryptPassword(password);

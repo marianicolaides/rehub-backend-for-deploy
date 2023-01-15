@@ -7,6 +7,8 @@ const therapistHubSchema = new mongoose.Schema(
     location: String,
     information: String,
     image:String,
+    password: String,
+    usertype: String,
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
