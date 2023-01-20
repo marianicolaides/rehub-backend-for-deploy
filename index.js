@@ -23,11 +23,7 @@ cron.schedule("* * * * *", (reviewPop) => {
   reviewPop: true;
   console.log("noew review is true");
 });
-
-var cors_proxy = require('cors-anywhere');
-
-
-// app.use(cors());
+app.use(cors());
 app.use(express.static("public"));
 
 app.set("views", path.join(__dirname, "views"));
@@ -94,16 +90,6 @@ mongoose
   });
 
   const PORT = process.env.PORT  || 5000;
-  cors_proxy.createServer({
-    originWhitelist: [], // Allow all origins
-    requireHeader: ['origin', 'x-requested-with'],
-    removeHeaders: ['cookie', 'cookie2']
-}).listen(PORT, host, function() {
-    console.log('Running CORS Anywhere on ' + host + ':' + PORT);
-});
-
-
-
 
 app.listen(process.env.PORT || 5000, () => {
   console.log(`listening on port ${PORT}`);
