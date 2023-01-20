@@ -15,7 +15,7 @@ const therapistRouter = require("./routes/therapist");
 const therapistHubRouter = require("./routes/therapisthub");
 const addSpaceRouter = require("./routes/AddSpace");
 const PaymentGatewayRouter=require("./routes/PaymentGateway")
-
+var host = process.env.HOST || '0.0.0.0';
 const Booking = require("./routes/Book");
 var cron = require("node-cron");
 const app = express();
@@ -23,7 +23,11 @@ cron.schedule("* * * * *", (reviewPop) => {
   reviewPop: true;
   console.log("noew review is true");
 });
-app.use(cors());
+
+var cors_proxy = require('cors-anywhere');
+
+
+// app.use(cors());
 app.use(express.static("public"));
 
 app.set("views", path.join(__dirname, "views"));
@@ -90,6 +94,16 @@ mongoose
   });
 
   const PORT = process.env.PORT  || 5000;
+  cors_proxy.createServer({
+    originWhitelist: [], // Allow all origins
+    requireHeader: ['origin', 'x-requested-with'],
+    removeHeaders: ['cookie', 'cookie2']
+}).listen(PORT, host, function() {
+    console.log('Running CORS Anywhere on ' + host + ':' + PORT);
+});
+
+
+
 
 app.listen(process.env.PORT || 5000, () => {
   console.log(`listening on port ${PORT}`);
