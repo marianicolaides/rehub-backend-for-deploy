@@ -23,7 +23,11 @@ cron.schedule("* * * * *", (reviewPop) => {
   reviewPop: true;
   console.log("noew review is true");
 });
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(express.static("public"));
 
 app.set("views", path.join(__dirname, "views"));
