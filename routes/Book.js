@@ -75,6 +75,45 @@ router.post("/add", async (req, res) => {
   }
 });
 
+// export async function driverVehicle(req, res) {
+//   let { id } = req.params;
+
+//   console.log("req.body===", id);
+//   let vehicle = null;
+//   let driver = null;
+//   const newDriver = null;
+//   // if (id) {
+//   vehicle = await Vehicle.find({ driverId: id });
+
+//   // }
+
+//   console.log("driver....", driver, newDriver);
+//   res.json({ success: true, vehicle });
+// }
+// router.get("/getAll", async (req, res) => {
+//   try {
+//     // console.log("");
+
+//     let { id } = req.params;
+
+//     console.log("req.body===", id);
+//     // let vehicle = null;
+//     // let driver = null;
+//     // const newDriver=null;
+//     // if (id) {
+//     let bookings = await Booking.find({ spaceUserID: id });
+
+//     // }
+
+//     res.json({ success: true, bookings });
+//   } catch (error) {
+//     console.log("error", error);
+//     res.status(500).json({
+//       Error_Message: error,
+//     });
+//   }
+// });
+
 router.get("/getAll", async (req, res) => {
   try {
     // console.log("");
