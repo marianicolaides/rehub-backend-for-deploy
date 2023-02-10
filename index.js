@@ -9,7 +9,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const multer = require("multer");
 const content = require("./routes/content");
-const receiptContent = require("./routes/receiptContent")
 
 const authRouter = require("./routes/auth");
 const therapistRouter = require("./routes/therapist");
@@ -20,55 +19,53 @@ var host = process.env.HOST || '0.0.0.0';
 const Booking = require("./routes/Book");
 var cron = require("node-cron");
 const app = express();
-// cron.schedule("* * * * *", (reviewPop) => {
-//   reviewPop: true;
-//   console.log("noew review is true");
-// });
+cron.schedule("* * * * *", (reviewPop) => {
+  reviewPop: true;
+  console.log("noew review is true");
+});
 app.use(
   cors({
     origin: "*",
   })
 );
 app.use(express.static("public"));
-app.use(bodyParser.json());
+
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
-
 var upload = multer({ dest: "uploads/" });
-
 app.use(logger("dev"));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static("public"));
 app.use(express.static("upload"));
 
 // app.use(cors());
-// app.use(
-//   cors({
-//     origin: "*",
-//     optionsSuccessStatus: 200,
-//     credentials: true,
-//   })
-// );
-// app.options(
-//   "*",
-//   cors({
-//     origin: "*",
-//     optionsSuccessStatus: 200,
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: "*",
+    optionsSuccessStatus: 200,
+    credentials: true,
+  })
+);
+app.options(
+  "*",
+  cors({
+    origin: "*",
+    optionsSuccessStatus: 200,
+    credentials: true,
+  })
+);
 
 app.use("/api/auth", authRouter);
 app.use("/api/therapist", therapistRouter);
 app.use("/api/therapisthub", therapistHubRouter);
 app.use("/api/space", addSpaceRouter);
 app.use("/api", PaymentGatewayRouter);
-app.use("/", receiptContent);
 app.use("/api/content", content);
+
 app.use("/api/booking", Booking);
 
 app.use(function (req, res, next) {
