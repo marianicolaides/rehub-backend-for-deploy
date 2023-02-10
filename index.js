@@ -9,7 +9,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const multer = require("multer");
 const content = require("./routes/content");
-
+const receiptContent = require("./routes/receiptContent")
 const authRouter = require("./routes/auth");
 const therapistRouter = require("./routes/therapist");
 const therapistHubRouter = require("./routes/therapisthub");
@@ -65,12 +65,12 @@ app.use("/api/therapisthub", therapistHubRouter);
 app.use("/api/space", addSpaceRouter);
 app.use("/api", PaymentGatewayRouter);
 app.use("/api/content", content);
-
+app.use("/", receiptContent)
 app.use("/api/booking", Booking);
 
-app.use(function (req, res, next) {
-  next(createError(404));
-});
+// app.use(function (req, res, next) {
+//   next(createError(404));
+// });
 
 
 
