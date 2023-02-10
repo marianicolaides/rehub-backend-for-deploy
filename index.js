@@ -19,10 +19,10 @@ var host = process.env.HOST || '0.0.0.0';
 const Booking = require("./routes/Book");
 var cron = require("node-cron");
 const app = express();
-cron.schedule("* * * * *", (reviewPop) => {
-  reviewPop: true;
-  console.log("noew review is true");
-});
+// cron.schedule("* * * * *", (reviewPop) => {
+//   reviewPop: true;
+//   console.log("noew review is true");
+// });
 app.use(
   cors({
     origin: "*",
