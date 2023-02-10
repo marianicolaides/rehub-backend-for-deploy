@@ -46,13 +46,13 @@ app.use(express.static("public"));
 app.use(express.static("upload"));
 
 // app.use(cors());
-app.use(
-  cors({
-    origin: "*",
-    optionsSuccessStatus: 200,
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: "*",
+//     optionsSuccessStatus: 200,
+//     credentials: true,
+//   })
+// );
 // app.options(
 //   "*",
 //   cors({
