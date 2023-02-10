@@ -33,11 +33,13 @@ app.use(express.static("public"));
 app.use(bodyParser.json());
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
+
 var upload = multer({ dest: "uploads/" });
+
 app.use(logger("dev"));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static("public"));
@@ -65,7 +67,7 @@ app.use("/api/therapist", therapistRouter);
 app.use("/api/therapisthub", therapistHubRouter);
 app.use("/api/space", addSpaceRouter);
 app.use("/api", PaymentGatewayRouter);
-app.use("/receipt/:id", content);
+app.use("/api/receipt", receiptContent);
 app.use("/api/content", content);
 app.use("/api/booking", Booking);
 
