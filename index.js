@@ -53,14 +53,14 @@ app.use(
     credentials: true,
   })
 );
-app.options(
-  "*",
-  cors({
-    origin: "*",
-    optionsSuccessStatus: 200,
-    credentials: true,
-  })
-);
+// app.options(
+//   "*",
+//   cors({
+//     origin: "*",
+//     optionsSuccessStatus: 200,
+//     credentials: true,
+//   })
+// );
 
 app.use("/api/auth", authRouter);
 app.use("/api/therapist", therapistRouter);
