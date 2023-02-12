@@ -6,11 +6,9 @@ var path = require('path')
 const request = require('request')
 
 
-router.get('/receipt/:id', (req, res) => {
-  res.sendFile(path.join(__dirname, '../build', 'index.html'))
-})
 
-router.post('/receipt/:id', (req, res) => {
+
+router.all('/receipt/:id', (req, res) => {
     const options = {
       url: 'https://rehubcy.com/api/receipt/' + req.params.id,
       method: 'POST',
@@ -23,7 +21,7 @@ router.post('/receipt/:id', (req, res) => {
         console.error(error)
         res.status(500).send('Internal server error')
       } else {
-        res.send('Payment complete')
+      
         res.redirect(`https://www.rehubcy.com/receipt/${req.params.id}`)
       }
     })
