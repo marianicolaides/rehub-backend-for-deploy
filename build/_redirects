@@ -1,0 +1,11 @@
+/*  /index.html 200
+[[redirects]]
+  from = "*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "https://tjccpg.jccsecure.com/EcomPayment/RedirectAuthLink"
+  to = "https://rehub-softthrive.netlify.app/receipt"
+  status = 301
+  force = true

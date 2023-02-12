@@ -2,11 +2,12 @@
 var express = require("express");
 var router = express.Router();
 var cookie = require('js-cookie')
+var path = require('path')
 const request = require('request')
 
 
 router.get('/receipt/:id', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'))
+  res.sendFile(path.join(__dirname, '../build', 'index.html'))
 })
 
 router.post('/receipt/:id', (req, res) => {
@@ -23,6 +24,7 @@ router.post('/receipt/:id', (req, res) => {
         res.status(500).send('Internal server error')
       } else {
         res.send('Payment complete')
+        res.redirect(`https://www.rehubcy.com/receipt/${req.params.id}`)
       }
     })
   })

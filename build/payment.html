@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Static Template</title>
+  </head>
+  <body>
+    <form
+      method="post"
+      name="paymentForm"
+      id="paymentForm"
+      action="https://tjccpg.jccsecure.com/EcomPayment/RedirectAuthLink"
+    >
+      <input type="hidden" name="Version" value="1.0.0" />
+      <input type="hidden" name="MerID" value="0093149011" />
+      <input type="hidden" name="AcqID" value="402971" />
+      <input
+        type="hidden"
+        name="https://rehubcy.com/receipt/:id"
+        value="https://rehub-softthrive.netlify.app/checkout"
+      />
+      <input type="hidden" name="PurchaseAmt" value="000000055050" />
+      <input type="hidden" name="PurchaseCurrency" value="840" />
+      <input type="hidden" name="PurchaseCurrencyExponent" value="2" />
+      <input type="hidden" name="OrderID" value="testtemp432" />
+      <input type="hidden" name="CaptureFlag" value="A" />
+      <!-- <input type="hidden" name="trxType" value="R" /> -->
+      <!-- password = 76u2713l -->
+      <input
+        type="hidden"
+        name="Signature"
+        value="tjBmAijiCdKi5whkTZlmj7bSxIU="
+      />
+      <input type="hidden" name="SignatureMethod" value="SHA1" />
+      
+      <input type="submit" name="submitPaymentButton" value="Pay" />
+    </form>
+  </body>
+</html>
