@@ -71,10 +71,10 @@ router.patch(
           image: `uploads/${req.file.filename}`,
         }
       );
-      if (password !== "") {
-        user.password = await user.encryptPassword(password);
-        await user.save();
-      }
+      await user.save();
+      // if (password !== "") {
+      //   user.password = await user.encryptPassword(password);
+      // }
 
       res.status(200).send("Changes saved successfully");
     } catch (error) {
