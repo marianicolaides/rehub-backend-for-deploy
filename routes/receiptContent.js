@@ -4,7 +4,7 @@ var router = express.Router();
 var cookie = require('js-cookie')
 const request = require('request')
 
-app.post('/receipt/:id', (req, res) => {
+router.post('/receipt/:id', (req, res) => {
     const options = {
       url: 'https://rehubcy.com/api/receipt/' + req.params.id,
       method: 'POST',
