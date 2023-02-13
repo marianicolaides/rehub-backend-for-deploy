@@ -22,58 +22,95 @@ const upload = multer({
   storage: storage,
 });
 
-
-
-router.patch("/update/profile", upload.single("image"),authorizedUser, async (req, res) => {
-  try {
-    let authorizedUser = req.user;
-    let {
-      firstName,
-      lastName,
-      phoneNumber,
-      location,
-      email,
-      information,
-      password,
-      usertype
-
-    } = req.body;
-
-    await TherapistHub.findByIdAndUpdate(
-      { _id: authorizedUser._id },
-      {
+router.patch(
+  "/update/profile",
+  upload.single("image"),
+  authorizedUser,
+  async (req, res) => {
+    try {
+      let authorizedUser = req.user;
+      let {
         firstName,
         lastName,
         phoneNumber,
         location,
-        information,
         email,
+        information,
         password,
         usertype,
-        image: `uploads/${req.file.filename}`,
+      } = req.body;
+
+      if (req.file) {
+        await TherapistHub.findByIdAndUpdate(
+          { _id: authorizedUser._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            email,
+            password,
+            usertype,
+            image: `uploads/${req.file.filename}`,
+          }
+        );
+        let user = await User.findByIdAndUpdate(
+          { _id: authorizedUser.user._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            email,
+            password,
+            usertype,
+            image: `uploads/${req.file.filename}`,
+          }
+        );
+        user.password = await user.encryptPassword(password);
+        await user.save();
+      } else {
+        await TherapistHub.findByIdAndUpdate(
+          { _id: authorizedUser._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            email,
+            password,
+            usertype,
+          }
+        );
+        let user = await User.findByIdAndUpdate(
+          { _id: authorizedUser.user._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            email,
+            password,
+            usertype,
+          }
+        );
+        user.password = await user.encryptPassword(password);
+        await user.save();
       }
-    );
-    let user = await User.findByIdAndUpdate(
-      { _id: authorizedUser.user._id },
-      { firstName,
-        lastName,
-        phoneNumber,
-        location,
-        information,
-        email,
-        password,
-        usertype,
-        image: `uploads/${req.file.filename}` }
-    );
-    await user.save();
-    // if (password !== "") {
-    //   user.password = await user.encryptPassword(password);
 
-    // }
+      // if (password !== "") {
+      //   user.password = await user.encryptPassword(password);
 
-    res.status(200).send("Changes saved successfully");
-  } catch (error) {
-    res.status(400).json({ error, errorMessage: "Internal Server Error" });
+      // }
+
+      res.status(200).send("Changes saved successfully");
+    } catch (error) {
+      res.status(400).json({ error, errorMessage: "Internal Server Error" });
+    }
   }
-});
+);
 module.exports = router;

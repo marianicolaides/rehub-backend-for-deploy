@@ -102,6 +102,7 @@ router.post("/signup", async (req, res) => {
           firstName: name[0],
           lastName: name[1],
           usertype:"simple",
+          email:userData.email,
           user: userSaved._id,
         });
         console.log("Therapist ===", Therapist);
@@ -110,6 +111,7 @@ router.post("/signup", async (req, res) => {
         person = await TherapistHub.create({
           firstName: name[0],
           lastName: name[1],
+          email:userData.email,
           usertype:"simple",
 
           user: userSaved._id,

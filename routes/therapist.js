@@ -40,38 +40,87 @@ router.patch(
         email,
         information,
         password,
-        usertype
+        usertype,
       } = req.body;
 
-      await Therapist.findByIdAndUpdate(
-        { _id: authorizedUser._id },
-        {
-          firstName,
-          lastName,
-          phoneNumber,
-          location,
-          information,
-          password,
-          usertype,
-          
-          image: `uploads/${req.file.filename}`,
-        }
-      );
-      let user = await User.findByIdAndUpdate(
-        { _id: authorizedUser.user._id },
-        {
-          firstName,
-          lastName,
-          phoneNumber,
-          location,
-          information,
-          email,
-          password,
-          usertype,
-          image: `uploads/${req.file.filename}`,
-        }
-      );
-      await user.save();
+      if (req.file) {
+        let user1 = await Therapist.findByIdAndUpdate(
+          { _id: authorizedUser._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            password,
+            usertype,
+
+            image: `uploads/${req.file.filename}`,
+          },
+          {
+            new: true,
+          }
+        );
+        await user1.save();
+        let user = await User.findByIdAndUpdate(
+          { _id: authorizedUser.user._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            email,
+            password,
+            usertype,
+            image: `uploads/${req.file.filename}`,
+          },
+          {
+            new: true,
+          }
+        );
+        user.password = await user.encryptPassword(password);
+
+        await user.save();
+      } else {
+        let user1 = await Therapist.findByIdAndUpdate(
+          { _id: authorizedUser._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            password,
+            usertype,
+          },
+          {
+            new: true,
+          }
+        );
+        await user1.save();
+
+        let user = await User.findByIdAndUpdate(
+          { _id: authorizedUser.user._id },
+          {
+            firstName,
+            lastName,
+            phoneNumber,
+            location,
+            information,
+            email,
+            password,
+            usertype,
+          },
+          {
+            new: true,
+          }
+        );
+        user.password = await user.encryptPassword(password);
+
+        await user.save();
+      }
+
       // if (password !== "") {
       //   user.password = await user.encryptPassword(password);
       // }
