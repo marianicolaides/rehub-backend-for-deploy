@@ -9,6 +9,7 @@ const therapistHubSchema = new mongoose.Schema(
     image:String,
     password: String,
     usertype: String,
+    userName:String,
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",

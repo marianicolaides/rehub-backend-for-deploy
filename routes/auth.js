@@ -82,13 +82,13 @@ router.post("/signup", async (req, res) => {
     let { name, username, password, accountType, email, usertype } = req.body;
     name = name.split(" ");
 
-    console.log("reqSignup",req.body)
+    console.log("reqSignup", req.body);
     let isDuplication = await handleUserDuplication(req.body);
 
     if (isDuplication)
       return res.status(400).send({ errorMessage: isDuplication });
 
-    let user = new User({ username, accountType, email,usertype:"simple" });
+    let user = new User({ username, accountType, email, usertype: "simple" });
     user.password = await user.encryptPassword(password);
     let userSaved = await user.save();
 
@@ -101,7 +101,8 @@ router.post("/signup", async (req, res) => {
         person = await Therapist.create({
           firstName: name[0],
           lastName: name[1],
-          usertype:"simple",
+          usertype: "simple",
+          userName: username,
           user: userSaved._id,
         });
         console.log("Therapist ===", Therapist);
@@ -110,8 +111,8 @@ router.post("/signup", async (req, res) => {
         person = await TherapistHub.create({
           firstName: name[0],
           lastName: name[1],
-          usertype:"simple",
-
+          usertype: "simple",
+          userName: username,
           user: userSaved._id,
         });
 
@@ -155,7 +156,7 @@ router.get("/user", authorizedUser, async (req, res) => {
 
 router.post("/google/signup", async (req, res) => {
   try {
-    const { tokenId, accountType,image } = req.body;
+    const { tokenId, accountType, image } = req.body;
 
     console.log("tokenId: ", tokenId);
 
@@ -207,7 +208,6 @@ router.post("/google/signup", async (req, res) => {
         image: image,
         signInType: "Google",
         accountType,
-        
       });
 
       switch (accountType) {
@@ -332,7 +332,7 @@ router.post("/submit/review", async (req, res) => {
       space: space,
       rating: rating,
       booking: bookingId,
-      flag:false
+      flag: false,
     });
     console.log("person========", person);
 
@@ -365,8 +365,7 @@ router.get("/all/review", async (req, res) => {
 });
 
 router.patch("/update/review", async (req, res) => {
-
-  console.log("req.bodLLLL",req.body)
+  console.log("req.bodLLLL", req.body);
   try {
     const { id, approvedata } = req.body;
     const datafind = await Review.findByIdAndUpdate(
@@ -448,9 +447,9 @@ router.post("/update/singlereview", async (req, res) => {
 
 //facebook login
 const facebookLogin1 = async (req, res) => {
-  let { email, username, id, signInType, accountType,image } = req.body;
+  let { email, username, id, signInType, accountType, image } = req.body;
   console.log(email, username, id, signInType, accountType);
-  console.log("req.body======",req.body)
+  console.log("req.body======", req.body);
   let fullname = [];
   fullname = username?.split(" ");
 
@@ -487,7 +486,7 @@ const facebookLogin1 = async (req, res) => {
         email: email,
         signInType: signInType,
         accountType,
-        image:image
+        image: image,
       });
 
       switch (accountType) {

@@ -8,7 +8,7 @@ const therapistSchema = new mongoose.Schema(
     information: String,
     password: String,
     usertype: String,
-
+userName:String,
 
     image:String,
     user: {
