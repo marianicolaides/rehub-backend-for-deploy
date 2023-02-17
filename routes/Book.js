@@ -173,7 +173,32 @@ router.get("/getAllB/:id", async (req, res) => {
     });
   }
 });
+router.get("/getBook/:id", async (req, res) => {
+  try {
+    // console.log("");
 
+    let dataget = await Booking.find({
+      bookingInvoiceNumber: req.params.id,
+      paymentStatus: "Paid",
+    }).populate({
+      path: "spaceId",
+      populate: {
+        path: "therapisthub",
+      },
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "data is here",
+      data: dataget,
+    });
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({
+      Error_Message: error,
+    });
+  }
+});
 router.post("/delete/booking", async (req, res) => {
   try {
     // const { data } = req.body;
