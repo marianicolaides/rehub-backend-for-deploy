@@ -8,7 +8,10 @@ const bookingSchema = new mongoose.Schema(
     spaceName: String,
     spacePrice: Number,
     bookingInvoiceNumber: String,
-    
+    paymentStatus: {
+      default: "Paid",
+      type: String,
+    },
     reviewSubmit: {
       default: false,
       type: Boolean,
@@ -21,7 +24,7 @@ const bookingSchema = new mongoose.Schema(
     },
     spaceId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "AddSpace",
+      ref: "space",
     },
     spaceUserID: {
       type: mongoose.Schema.Types.ObjectId,

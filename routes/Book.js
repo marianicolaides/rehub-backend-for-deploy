@@ -147,6 +147,32 @@ router.get("/getAll", async (req, res) => {
     });
   }
 });
+router.get("/getAllB/:id", async (req, res) => {
+  try {
+    // console.log("");
+
+    let dataget = await Booking.find({
+      userId: req.params.id,
+      paymentStatus: "Paid",
+    }).populate({
+      path: "spaceId",
+      populate: {
+        path: "therapisthub",
+      },
+    });
+
+    res.status(200).json({
+      status: true,
+      message: "data is here",
+      data: dataget,
+    });
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({
+      Error_Message: error,
+    });
+  }
+});
 
 router.post("/delete/booking", async (req, res) => {
   try {
@@ -477,7 +503,39 @@ router.patch("/updatebooking", async (req, res) => {
     });
   }
 });
+router.patch("/update/:bookingInvoiceNumber", async (req, res) => {
+  try {
+    // console.log("req.body  ==== ", req.body);
+    const { datatest } = req.body;
+    let data = null;
+    let remove = null;
+    let book = await Booking.find({
+      bookingInvoiceNumber: req.params.bookingInvoiceNumber,
+    });
+    for (let i = 0; i < book.length; i++) {
+      data = await Booking.findByIdAndUpdate(
+        { _id: book[i]._id },
+        {
+          paymentStatus: "Cancelled",
+        }
+      );
 
+      // console.log("data data == ", data);
+    }
+
+    await data.save();
+    res.status(200).json({
+      status: true,
+      message: "Updated Sucessfully",
+      // data: dataget,
+    });
+  } catch (error) {
+    console.log("error", error);
+    res.status(500).json({
+      Error_Message: error,
+    });
+  }
+});
 // const myFunction = (e) => {
 //   var yesterday = moment().subtract(1, "day").format("YYYY-MM-DD");
 //   var SpecialToDate = e;

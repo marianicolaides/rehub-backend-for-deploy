@@ -142,7 +142,27 @@ router.patch(
     }
   }
 );
+router.patch("/update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const updatespace = await Space.findByIdAndUpdate(
+      { _id: id },
+      {
+        pickDate: req.body.temppickup,
+      },
+      {
+        new: true,
+      }
+    );
+
+    await updatespace.save();
+
+    res.status(201).json({ message: "update Sucessfully" });
+  } catch (error) {
+    res.status(422).json({ error, message: "Server error at update space" });
+  }
+});
 router.patch(
   "/addavailability/:id",
 
@@ -164,7 +184,6 @@ router.patch(
 
       // let dataDayIndex = updatespace.pickDate.findIndex((data) =>  moment(data.dateofAvailibilty).format("dddd") ==
       //  moment(req.body.currentDate).format("dddd"));
-     
 
       await updatespace.save();
       // await newDataSave.save();
