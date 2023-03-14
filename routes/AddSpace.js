@@ -28,7 +28,7 @@ const upload = multer({
   storage: storage,
 });
 router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
-  console.log(req.body);
+  const bodyData = { ...req.body };
   try {
     let { userId } = req.body;
     let user = await User.findOne({ _id: userId });
@@ -38,34 +38,32 @@ router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
       case "Professional":
         person = await Therapist.findOne({ user: userId });
         data = new Space({
-          name: req.body.name,
-          price: req.body.price,
-
-          address: req.body.address,
+          name: bodyData.name,
+          price: bodyData.price,
+          address: bodyData.address,
+          description: bodyData.description,
           spaceImage: `uploads/${req.file.filename}`,
           userImage: user.image,
           therapist: person._id,
         });
         await data.save();
-
         break;
+
       case "Host":
         person = await TherapistHub.findOne({ user: userId });
-        console.log("person id", user, person._id);
         data = new Space({
-          name: req.body.name,
-          price: req.body.price,
-          address: req.body.address,
-          longitude: req.body.longitude,
-          latitude: req.body.latitude,
-          unConsectiveSlots: req.body.unConsectiveSlots,
+          name: bodyData.name,
+          price: bodyData.price,
+          address: bodyData.address,
+          longitude: bodyData.longitude,
+          latitude: bodyData.latitude,
+          unConsectiveSlots: bodyData.unConsectiveSlots,
+          description: bodyData.description,
           spaceImage: `uploads/${req.file.filename}`,
           userImage: user.image,
           therapisthub: person._id,
         });
-
         await data.save();
-
         break;
 
       default:
@@ -114,6 +112,7 @@ router.patch(
             name: req.body.name,
             price: req.body.price,
             address: req.body.address,
+            description: req.body.description,
             spaceImage: `uploads/${req.file.filename}`,
           },
           {
@@ -129,6 +128,7 @@ router.patch(
             name: req.body.name,
             price: req.body.price,
             address: req.body.address,
+            description: req.body.description,
           },
           {
             new: true,

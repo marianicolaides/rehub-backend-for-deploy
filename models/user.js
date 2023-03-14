@@ -23,6 +23,14 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.pre(['findByIdAndUpdate', 'save'], async function (next) {
+  if (this.password) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+
+  next();
+});
+
 userSchema.method("encryptPassword", async (password) => {
   let encryptPassword = await bcrypt.hash(password, 10);
   return encryptPassword;

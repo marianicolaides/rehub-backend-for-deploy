@@ -6,6 +6,10 @@ const AddSpaceSchema = new mongoose.Schema({
   spaceImage: String,
   longitude:String,
   latitude:String,
+  description: {
+    default: "",
+    type: String,
+  },
   userImage: {
     default: null,
     type: String,

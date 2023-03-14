@@ -44,7 +44,7 @@ router.patch(
       } = req.body;
 
       if (req.file) {
-        let user1 = await Therapist.findByIdAndUpdate(
+        await Therapist.findByIdAndUpdate(
           { _id: authorizedUser._id },
           {
             firstName,
@@ -61,8 +61,7 @@ router.patch(
             new: true,
           }
         );
-        await user1.save();
-        let user = await User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
           { _id: authorizedUser.user._id },
           {
             firstName,
@@ -79,11 +78,8 @@ router.patch(
             new: true,
           }
         );
-        user.password = await user.encryptPassword(password);
-
-        await user.save();
       } else {
-        let user1 = await Therapist.findByIdAndUpdate(
+        await Therapist.findByIdAndUpdate(
           { _id: authorizedUser._id },
           {
             firstName,
@@ -98,9 +94,8 @@ router.patch(
             new: true,
           }
         );
-        await user1.save();
 
-        let user = await User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
           { _id: authorizedUser.user._id },
           {
             firstName,
@@ -116,9 +111,6 @@ router.patch(
             new: true,
           }
         );
-        user.password = await user.encryptPassword(password);
-
-        await user.save();
       }
 
       // if (password !== "") {
@@ -127,6 +119,7 @@ router.patch(
 
       res.status(200).send("Changes saved successfully");
     } catch (error) {
+      console.log(error);
       res.status(400).json({ error, errorMessage: "Internal Server Error" });
     }
   }
