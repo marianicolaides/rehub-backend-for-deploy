@@ -368,7 +368,7 @@ router.patch("/update/review", async (req, res) => {
   console.log("req.bodLLLL", req.body);
   try {
     const { id, approvedata } = req.body;
-    const datafind = await Review.findByIdAndUpdate(
+    const datafind = await Review.findOneAndUpdate(
       { _id: id },
       {
         approve: approvedata,
@@ -421,7 +421,7 @@ router.post("/update/singlereview", async (req, res) => {
   try {
     let { id, data } = req.body;
     console.log("req.body req.body sdsdsdsd hhhhhhhhhhhhh", req.body);
-    let dataget = await Booking.findByIdAndUpdate(
+    let dataget = await Booking.findOneAndUpdate(
       {
         _id: id,
       },

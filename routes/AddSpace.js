@@ -113,7 +113,7 @@ router.patch(
             price: req.body.price,
             address: req.body.address,
             description: req.body.description,
-            spaceImage: `uploads/${req.file.filename}`,
+            ...(req.file ? { spaceImage: `uploads/${req.file.filename}` } : {})
           },
           {
             new: true,

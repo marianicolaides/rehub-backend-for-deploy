@@ -41,7 +41,7 @@ router.patch(
       } = req.body;
 
       if (req.file) {
-        await TherapistHub.findByIdAndUpdate(
+        await TherapistHub.findOneAndUpdate(
           { _id: authorizedUser._id },
           {
             firstName,
@@ -55,7 +55,7 @@ router.patch(
             image: `uploads/${req.file.filename}`,
           }
         );
-        let user = await User.findByIdAndUpdate(
+        let user = await User.findOneAndUpdate(
           { _id: authorizedUser.user._id },
           {
             firstName,
@@ -69,10 +69,8 @@ router.patch(
             image: `uploads/${req.file.filename}`,
           }
         );
-        user.password = await user.encryptPassword(password);
-        await user.save();
       } else {
-        await TherapistHub.findByIdAndUpdate(
+        await TherapistHub.findOneAndUpdate(
           { _id: authorizedUser._id },
           {
             firstName,
@@ -85,7 +83,7 @@ router.patch(
             usertype,
           }
         );
-        let user = await User.findByIdAndUpdate(
+        let user = await User.findOneAndUpdate(
           { _id: authorizedUser.user._id },
           {
             firstName,

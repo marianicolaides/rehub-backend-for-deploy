@@ -7,6 +7,7 @@ const { TherapistHub } = require("../models/therapisthub");
 const { User } = require("../models/user");
 const { CheckDataIs } = require("../utils/CheckData");
 var cron = require("node-cron");
+const { authorizedUser } = require("../middleware/Authorized");
 var router = express.Router();
 
 router.post("/add", async (req, res) => {
@@ -114,11 +115,11 @@ router.post("/add", async (req, res) => {
 //   }
 // });
 
-router.get("/getAll", async (req, res) => {
+router.get("/getAll",   authorizedUser, async (req, res) => {
   try {
-    // console.log("");
+    console.log("req.user =>>>>>>>>>>>>", req.user);
 
-    let dataget = await Booking.find();
+    let dataget = await Booking.find({ userId: req.user._id });
     // console.log("dataget", dataget);
 
     // let datatest = await dataget.map((item) => {

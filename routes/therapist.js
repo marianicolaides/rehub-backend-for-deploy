@@ -44,7 +44,7 @@ router.patch(
       } = req.body;
 
       if (req.file) {
-        await Therapist.findByIdAndUpdate(
+        await Therapist.findOneAndUpdate(
           { _id: authorizedUser._id },
           {
             firstName,
@@ -61,7 +61,7 @@ router.patch(
             new: true,
           }
         );
-        await User.findByIdAndUpdate(
+        await User.findOneAndUpdate(
           { _id: authorizedUser.user._id },
           {
             firstName,
@@ -79,7 +79,7 @@ router.patch(
           }
         );
       } else {
-        await Therapist.findByIdAndUpdate(
+        await Therapist.findOneAndUpdate(
           { _id: authorizedUser._id },
           {
             firstName,
@@ -95,7 +95,7 @@ router.patch(
           }
         );
 
-        await User.findByIdAndUpdate(
+        await User.findOneAndUpdate(
           { _id: authorizedUser.user._id },
           {
             firstName,
