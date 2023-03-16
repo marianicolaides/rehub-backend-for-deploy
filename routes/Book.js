@@ -119,7 +119,7 @@ router.get("/getAll",   authorizedUser, async (req, res) => {
   try {
     console.log("req.user =>>>>>>>>>>>>", req.user);
 
-    let dataget = await Booking.find({ userId: req.user._id });
+    let dataget = await Booking.find();
     // console.log("dataget", dataget);
 
     // let datatest = await dataget.map((item) => {
