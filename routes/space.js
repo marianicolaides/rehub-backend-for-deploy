@@ -1,5 +1,5 @@
 var express = require("express");
-const { Space } = require("../models/AddSpace");
+const { Space } = require("../models/Space");
 const { User } = require("../models/user");
 const { Therapist } = require("../models/therapist");
 const { TherapistHub } = require("../models/therapisthub");
@@ -41,7 +41,7 @@ router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
           name: bodyData.name,
           price: bodyData.price,
           address: bodyData.address,
-          description: bodyData.description,
+          detailedInformation: bodyData.detailedInformation,
           spaceImage: `uploads/${req.file.filename}`,
           userImage: user.image,
           therapist: person._id,
@@ -58,7 +58,7 @@ router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
           longitude: bodyData.longitude,
           latitude: bodyData.latitude,
           unConsectiveSlots: bodyData.unConsectiveSlots,
-          description: bodyData.description,
+          detailedInformation: bodyData.detailedInformation,
           spaceImage: `uploads/${req.file.filename}`,
           userImage: user.image,
           therapisthub: person._id,
@@ -104,6 +104,7 @@ router.patch(
     try {
       const { id } = req.params;
 
+      console.log("=>>>>>>>>>>", req.body);
       const checkSpaceExist = await Space.find({ _id: id });
       if (req.file) {
         const updatespace = await Space.findByIdAndUpdate(
@@ -112,7 +113,7 @@ router.patch(
             name: req.body.name,
             price: req.body.price,
             address: req.body.address,
-            description: req.body.description,
+            detailedInformation: req.body.detailedInformation,
             ...(req.file ? { spaceImage: `uploads/${req.file.filename}` } : {})
           },
           {
@@ -128,7 +129,7 @@ router.patch(
             name: req.body.name,
             price: req.body.price,
             address: req.body.address,
-            description: req.body.description,
+            detailedInformation: req.body.detailedInformation,
           },
           {
             new: true,
@@ -285,11 +286,11 @@ router.get("/getspace/:id", async (req, res) => {
 router.post("/avaiabilty", async (req, res) => {
   let { userId } = req.body;
 
-  let space = await Space.findOne({ _id: userId }).populate({
+  let existingSpace = await Space.findOne({ _id: userId }).populate({
     path: "therapisthub",
     select: "firstName lastName",
   });
-  let = { pickDate, space, unConsectiveSlots } = req.body;
+  let { pickDate, space, unConsectiveSlots } = req.body;
   try {
     let data = new Availability({
       pickDate,

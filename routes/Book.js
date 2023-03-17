@@ -1,5 +1,5 @@
 var express = require("express");
-const { Space } = require("../models/AddSpace");
+const { Space } = require("../models/Space");
 var moment = require("moment");
 const { Booking } = require("../models/Book");
 const { Therapist } = require("../models/therapist");

@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
-const AddSpaceSchema = new mongoose.Schema({
+const SpaceSchema = new mongoose.Schema({
   name: String,
   price: Number,
   address: String,
   spaceImage: String,
   longitude:String,
   latitude:String,
-  description: {
+  detailedInformation: {
     default: "",
     type: String,
   },
@@ -52,6 +52,6 @@ const AddSpaceSchema = new mongoose.Schema({
     ref: "therapist",
   },
 });
-const Space = mongoose.model("space", AddSpaceSchema);
+const Space = mongoose.model("space", SpaceSchema);
 
 module.exports.Space = Space;
