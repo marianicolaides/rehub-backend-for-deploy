@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 const therapistHubSchema = new mongoose.Schema(
   {
     firstName: String,
@@ -19,6 +20,19 @@ const therapistHubSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+therapistHubSchema.pre(['findOneAndUpdate'], async function (next) {
+  ["email", "password"].forEach((key) => {
+    if (!this._update[key]) {
+      delete this._update[key];
+    }
+  });
+  if (this._update.password) {
+    this._update.password = await bcrypt.hash(this._update.password, 10);
+  }
+
+  next();
+});
 
 const TherapistHub = mongoose.model("therapisthub", therapistHubSchema);
 

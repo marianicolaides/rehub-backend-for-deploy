@@ -5,6 +5,7 @@ const { User } = require("../models/user");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const { TherapistHub } = require("../models/therapisthub");
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -32,7 +33,7 @@ router.patch(
 
     try {
       let authorizedUser = req.user;
-      let {
+      const {
         firstName,
         lastName,
         phoneNumber,
@@ -43,37 +44,21 @@ router.patch(
         usertype,
       } = req.body;
 
-      if (req.file) {
-        await Therapist.findOneAndUpdate(
-          { _id: authorizedUser._id },
-          {
-            firstName,
-            lastName,
-            phoneNumber,
-            location,
-            information,
-            password,
-            usertype,
+      const updateData = {
+        firstName,
+        lastName,
+        phoneNumber,
+        location,
+        information,
+        password,
+        usertype,
+        ...(req.file ? { image: `uploads/${req.file.filename}` } : {})
+      }
 
-            image: `uploads/${req.file.filename}`,
-          },
-          {
-            new: true,
-          }
-        );
-        await User.findOneAndUpdate(
-          { _id: authorizedUser.user._id },
-          {
-            firstName,
-            lastName,
-            phoneNumber,
-            location,
-            information,
-            email,
-            password,
-            usertype,
-            image: `uploads/${req.file.filename}`,
-          },
+      if (authorizedUser.user.accountType === "Host") {
+        await TherapistHub.findOneAndUpdate(
+          { _id: authorizedUser._id },
+          updateData,
           {
             new: true,
           }
@@ -81,38 +66,29 @@ router.patch(
       } else {
         await Therapist.findOneAndUpdate(
           { _id: authorizedUser._id },
-          {
-            firstName,
-            lastName,
-            phoneNumber,
-            location,
-            information,
-            password,
-            usertype,
-          },
-          {
-            new: true,
-          }
-        );
-
-        await User.findOneAndUpdate(
-          { _id: authorizedUser.user._id },
-          {
-            firstName,
-            lastName,
-            phoneNumber,
-            location,
-            information,
-            email,
-            password,
-            usertype,
-          },
+          updateData,
           {
             new: true,
           }
         );
       }
-
+      await User.findOneAndUpdate(
+        { _id: authorizedUser.user._id },
+        {
+          firstName,
+          lastName,
+          phoneNumber,
+          location,
+          information,
+          email,
+          password,
+          usertype,
+          ...(req.file ? { image: `uploads/${req.file.filename}` } : {})
+        },
+        {
+          new: true,
+        }
+      );
       // if (password !== "") {
       //   user.password = await user.encryptPassword(password);
       // }
