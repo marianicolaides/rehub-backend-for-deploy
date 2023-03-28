@@ -115,7 +115,7 @@ router.post("/add", async (req, res) => {
 //   }
 // });
 
-router.get("/getAll",   authorizedUser, async (req, res) => {
+router.get("/getAll", authorizedUser, async (req, res) => {
   try {
     console.log("req.user =>>>>>>>>>>>>", req.user);
 
@@ -148,13 +148,13 @@ router.get("/getAll",   authorizedUser, async (req, res) => {
     });
   }
 });
-router.get("/getAllB/:id", async (req, res) => {
+router.get("/getAllB/:id", authorizedUser, async (req, res) => {
   try {
     // console.log("");
 
     let dataget = await Booking.find({
       userId: req.params.id,
-      paymentStatus: "Paid",
+      ...(req.user?.user.accountType ? {} : { paymentStatus: "Paid" }),
     }).populate({
       path: "spaceId",
       populate: {
