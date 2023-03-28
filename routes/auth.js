@@ -36,7 +36,7 @@ const handleUserDuplication = async (userData) => {
 router.post("/login", async (req, res) => {
   try {
     let { username, password } = req.body;
-    let user = await User.findOne({ username_lower: username.toLowerCase() });
+    let user = await User.findOne({ username: { '$regex': `^${username.toLowerCase()}$`, '$options': 'i' } });
 
     if (!user)
       return res.status(400).json({ errorMessage: "User does not exist" });
