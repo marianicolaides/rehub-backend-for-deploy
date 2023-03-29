@@ -5,7 +5,7 @@ const { Therapist } = require("../models/therapist");
 const { TherapistHub } = require("../models/therapisthub");
 const { Availability } = require("../models/Availabilty");
 const { TimeSlot } = require("../models/TimeSlot");
-var moment = require("moment");
+const { ScheduleTimeSlot } = require("../models/scheduleTimeSlots");
 
 var router = express.Router();
 const multer = require("multer");
@@ -198,6 +198,40 @@ router.patch(
     }
   }
 );
+router.post(
+  "/schedule-timeslots/:id",
+
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { scheduleSlots } = req.body;
+
+      const existing = await ScheduleTimeSlot.findOne(
+        { spaceId: id },
+        { scheduleSlots },
+      );
+
+      let slots;
+      if (existing) {
+        slots = await ScheduleTimeSlot.findOneAndUpdate(
+          { spaceId: id },
+          { scheduleSlots },
+        );
+      } else {
+        slots = await ScheduleTimeSlot.create({ spaceId: id, scheduleSlots });
+      }
+
+      await Space.findOneAndUpdate({ _id: id }, { scheduleTimeSlot: slots._id });
+      res
+        .status(201)
+        .json({ message: "Availability added sucessfully", slots });
+    } catch (error) {
+      res
+        .status(422)
+        .json({ error, message: "Server error at availability add on space!" });
+    }
+  }
+);
 //update multiple spaces
 
 router.patch("/multiple/space/update", async (req, res) => {
@@ -266,10 +300,13 @@ router.get("/getspace/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const spaceIndvidual = await Space.findById({ _id: id }).populate({
-      path: "therapisthub",
-      select: "firstName lastName",
-    });
+    const spaceIndvidual = await Space.findById({ _id: id }).populate([
+      {
+        path: "therapisthub",
+        select: "firstName lastName",
+      },
+      { path: "scheduleTimeSlot" }
+    ]);
 
     res.status(201).json({
       status: true,

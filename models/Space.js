@@ -18,31 +18,10 @@ const SpaceSchema = new mongoose.Schema({
     type: Array,
   },
   currentDate:String,
-  // pickDate: [
-  //   {
-  //     dateofAvailibilty: {
-  //       type: String,
-  //     },
-
-  //     timeslots: [
-  //       // type: Array,
-  //       {
-  //         isTimeSelected: {
-  //           type: Boolean,
-  //           default: false,
-  //         },
-  //         isBooked: {
-  //           type: Boolean,
-  //           default: false,
-  //         },
-  //         timevalue: {
-  //           type: String,
-  //         },
-  //       },
-  //     ],
-  //   },
-  // ],
-
+  scheduleTimeSlot: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "scheduleTimeSlot",
+  },
   therapisthub: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "therapisthub",

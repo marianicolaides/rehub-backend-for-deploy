@@ -96,7 +96,6 @@ router.patch(
             usertype,
           }
         );
-        user.password = await user.encryptPassword(password);
         await user.save();
       }
 
