@@ -28,8 +28,6 @@ router.patch(
   upload.single("image"),
   authorizedUser,
   async (req, res) => {
-    console.log("req", req.body);
-    console.log("req1", req.file);
 
     try {
       let authorizedUser = req.user;
@@ -53,7 +51,7 @@ router.patch(
         password,
         usertype,
         ...(req.file ? { image: `uploads/${req.file.filename}` } : {})
-      }
+      };
 
       if (authorizedUser.user.accountType === "Host") {
         await TherapistHub.findOneAndUpdate(
@@ -92,6 +90,28 @@ router.patch(
       // if (password !== "") {
       //   user.password = await user.encryptPassword(password);
       // }
+
+      res.status(200).send("Changes saved successfully");
+    } catch (error) {
+      console.log(error);
+      res.status(400).json({ error, errorMessage: "Internal Server Error" });
+    }
+  }
+);
+
+router.put(
+  "/update/account-type",
+  authorizedUser,
+  async (req, res) => {
+    try {
+      let authorizedUser = req.user;
+      const { accountType } = req.body;
+
+      await User.findOneAndUpdate(
+        { _id: authorizedUser.user._id },
+        { accountType },
+        { new: true }
+      );
 
       res.status(200).send("Changes saved successfully");
     } catch (error) {

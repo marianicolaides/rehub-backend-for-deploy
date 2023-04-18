@@ -15,15 +15,16 @@ const userSchema = new mongoose.Schema(
     password: String,
     email: String,
     image: String,
-    uniqueId:String,
-   
+    uniqueId: String,
+    isValid: Boolean,
+    token: String,
   },
   {
     timestamps: true,
   }
 );
 
-userSchema.pre(['findOneAndUpdate'], async function (next) {
+userSchema.pre(["findOneAndUpdate"], async function (next) {
   ["email", "password"].forEach((key) => {
     if (!this._update[key]) {
       delete this._update[key];

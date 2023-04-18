@@ -1,6 +1,4 @@
-var express = require("express");
-// import axios from './lib/axios.js';
-const fetch = require("node-fetch");
+const express = require("express");
 
 const { Therapist } = require("../models/therapist");
 const { User } = require("../models/user");
@@ -8,22 +6,28 @@ const jwt = require("jsonwebtoken");
 const { TherapistHub } = require("../models/therapisthub");
 const { authorizedUser } = require("../middleware/Authorized");
 const { Review } = require("../models/review");
-var router = express.Router();
+const router = express.Router();
 
 const { OAuth2Client } = require("google-auth-library");
 const { Booking } = require("../models/Book");
+const { sendMail } = require("../utils/notification.util");
+const ForgotPasswordTemplate = require("../emailTemplates/ForgotPasswordTemplate");
+const VerifySignUpTemplate = require("../emailTemplates/VerifySignUpTemplate");
+const EmailConstants = require("../emailTemplates/EmailConstants");
+const env = require("../config");
+const { generateToken, decodeToken } = require("../utils/token.util");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const handleUserDuplication = async (userData) => {
-  let duplicateUsername = await User.findOne({
+  const duplicateUsername = await User.findOne({
     username: userData.username,
     signInType: "App",
   });
   if (duplicateUsername) return "User is already registered with this username";
 
   if (userData.email) {
-    let duplicateEmail = await User.findOne({
+    const duplicateEmail = await User.findOne({
       email: userData.email,
       signInType: "App",
     });
@@ -35,13 +39,13 @@ const handleUserDuplication = async (userData) => {
 
 router.post("/login", async (req, res) => {
   try {
-    let { username, password } = req.body;
-    let user = await User.findOne({ username: { '$regex': `^${username.toLowerCase()}$`, '$options': 'i' } });
+    const { username, password } = req.body;
+    const user = await User.findOne({ username: { "$regex": `^${username.toLowerCase()}$`, "$options": "i" } });
 
     if (!user)
       return res.status(400).json({ errorMessage: "User does not exist" });
 
-    let isPasswordEqual = await user.comparePassword(password, user.password);
+    const isPasswordEqual = await user.comparePassword(password, user.password);
     if (!isPasswordEqual)
       return res.status(400).json({ errorMessage: "Password is incorrect" });
 
@@ -50,7 +54,7 @@ router.post("/login", async (req, res) => {
         person = await Therapist.findOne({ user: user._id })
           .populate({
             path: "user",
-            select: "accountType email image createdAt",
+            select: "accountType email image createdAt signInType",
           })
           .lean();
 
@@ -59,7 +63,7 @@ router.post("/login", async (req, res) => {
         person = await TherapistHub.findOne({ user: user._id })
           .populate({
             path: "user",
-            select: "accountType email image createdAt",
+            select: "accountType email image createdAt signInType",
           })
           .lean();
 
@@ -69,11 +73,95 @@ router.post("/login", async (req, res) => {
         break;
     }
 
-    let token = jwt.sign(person, process.env.JWT_PRIVATE_KEY);
+    const token = jwt.sign(person, process.env.JWT_PRIVATE_KEY);
 
     res.status(200).send(token);
   } catch (error) {
     res.status(400).json({ error, errorMessage: "Internal Server Error" });
+  }
+});
+
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user)
+      return res.status(400).json({ errorMessage: "User does not exist" });
+
+    const token = generateToken({ id: user._id, email });
+    await User.findByIdAndUpdate(user._id, { token });
+    const url = `${env.FE_URL}reset-password/${token}`;
+    const mail = ForgotPasswordTemplate
+      .replace(EmailConstants.user, "Dear")
+      .replace(EmailConstants.url, url);
+    await sendMail(email, mail, "Forgot Password");
+
+    res.status(200).send(token);
+  } catch (error) {
+    res.status(500).json({ error, errorMessage: "Internal Server Error" });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { email, password, token } = req.body;
+
+    const { id } = await decodeToken(token);
+
+    const user = await User.findById(id);
+    if (!user)
+      return res.status(400).json({ errorMessage: "User does not exist" });
+
+    await User.findOneAndUpdate({ email: user.email }, { password });
+
+    res.status(200).send({ message: "Password is reset successfully" });
+  } catch (error) {
+    res.status(500).json({ error, errorMessage: "Internal Server Error" });
+  }
+});
+
+router.post("/confirm-reset-password", async (req, res) => {
+  try {
+    const { token } = req.body;
+    const { id } = await decodeToken(token);
+
+    const user = await User.findById(id);
+
+    if (!user)
+      return res.status(400).json({ errorMessage: "User does not exist" });
+
+    if (user.token !== token)
+      return res.status(400).json({ errorMessage: "Token is not valid" });
+
+    res.status(200).send({ email: user.email });
+  } catch (error) {
+    res.status(500).json({ error, errorMessage: "Internal Server Error" });
+  }
+});
+
+router.post("/verify-email", async (req, res) => {
+  try {
+    const { token } = req.body;
+    const { id } = await decodeToken(token);
+
+    const user = await User.findById(id);
+
+    if (!user)
+      return res.status(400).json({ message: "User does not exist" });
+
+    if (user.isValid)
+      return res.status(400).json({ message: "Verification is already done" });
+
+    if (user.token !== token)
+      return res.status(400).json({ message: "Token is not valid" });
+
+    await User.findByIdAndUpdate(user._id, { isValid: true, token: "" });
+
+    res.status(200).send({ message: "Verification is successfully done" });
+  } catch (error) {
+    res.status(500).json({ error, message: "Internal Server Error" });
   }
 });
 
@@ -82,17 +170,21 @@ router.post("/signup", async (req, res) => {
     let { name, username, password, accountType, email, usertype } = req.body;
     name = name.split(" ");
 
-    console.log("reqSignup", req.body);
-    let isDuplication = await handleUserDuplication(req.body);
+    const isDuplication = await handleUserDuplication(req.body);
 
     if (isDuplication)
       return res.status(400).send({ errorMessage: isDuplication });
 
-    let user = new User({ username, accountType, email, usertype: "simple" });
+    const user = new User({ username, accountType, email, usertype: "simple", isValid: false });
     user.password = await user.encryptPassword(password);
-    let userSaved = await user.save();
-
-    console.log("userSaved==", userSaved);
+    const userSaved = await user.save();
+    const token = generateToken({ id: userSaved._id, email: userSaved.email });
+    await User.findByIdAndUpdate(userSaved._id, { token });
+    const url = `${env.FE_URL}verify-email/${token}`;
+    const mail = VerifySignUpTemplate
+      .replace(EmailConstants.user, "Dear")
+      .replace(EmailConstants.url, url);
+    await sendMail(email, mail, "Forgot Password");
 
     let person;
 
@@ -105,7 +197,6 @@ router.post("/signup", async (req, res) => {
           userName: username,
           user: userSaved._id,
         });
-        console.log("Therapist ===", Therapist);
         break;
       case "Host":
         person = await TherapistHub.create({
@@ -131,19 +222,18 @@ router.post("/signup", async (req, res) => {
 });
 
 router.get("/user", authorizedUser, async (req, res) => {
-  let authorizedUser = req.user;
+  const authorizedUser = req.user;
   let person;
-  console.log("authorizedUser", authorizedUser);
   switch (authorizedUser?.user?.accountType) {
     case "Professional":
       person = await Therapist.findOne({ user: authorizedUser.user._id })
-        .populate({ path: "user", select: "accountType email image createdAt" })
+        .populate({ path: "user", select: "accountType signInType email image createdAt" })
         .lean();
 
       break;
     case "Host":
       person = await TherapistHub.findOne({ user: authorizedUser.user._id })
-        .populate({ path: "user", select: "accountType email image createdAt" })
+        .populate({ path: "user", select: "accountType signInType email image createdAt" })
         .lean();
 
       break;
@@ -158,9 +248,6 @@ router.post("/google/signup", async (req, res) => {
   try {
     const { tokenId, accountType, image } = req.body;
 
-    console.log("tokenId: ", tokenId);
-
-    console.log("Response:======= ", req.body);
     const { payload } = await client.verifyIdToken({
       idToken: tokenId,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -170,7 +257,7 @@ router.post("/google/signup", async (req, res) => {
         .status(400)
         .json({ errorMessage: "Email could not be verified" });
 
-    let user = await User.findOne({
+    const user = await User.findOne({
       email: payload.email,
       signInType: "Google",
     });
@@ -202,8 +289,8 @@ router.post("/google/signup", async (req, res) => {
       }
       token = jwt.sign(person, process.env.JWT_PRIVATE_KEY);
     } else {
-      let name = payload.name.split(" ");
-      let userSaved = await User.create({
+      const name = payload.name.split(" ");
+      const userSaved = await User.create({
         email: payload.email,
         image: image,
         signInType: "Google",
@@ -254,14 +341,12 @@ router.post("/google/signup", async (req, res) => {
 
 router.post("/google/login", async (req, res) => {
   try {
-    const { tokenId } = req.body;
-    console.log("sss", req.body);
+    const { tokenId, profile, accountType } = req.body;
 
     const { payload } = await client.verifyIdToken({
       idToken: tokenId,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    console.log("payload", payload);
 
     if (!payload.email_verified)
       return res
@@ -272,10 +357,16 @@ router.post("/google/login", async (req, res) => {
       email: payload.email,
       signInType: "Google",
     });
-    if (!user)
-      return res
-        .status(200)
-        .json({ message: "User is not present", error: true });
+    if (!user) {
+      user = await User.create({
+        email: payload.email,
+        username: payload.name,
+        image: profile.imageUrl,
+        isValid: true,
+        signInType: "Google",
+        accountType
+      });
+    }
 
     let person;
 
@@ -284,7 +375,7 @@ router.post("/google/login", async (req, res) => {
         person = await Therapist.findOne({ user: user._id })
           .populate({
             path: "user",
-            select: "accountType email image createdAt",
+            select: "accountType email image createdAt signInType",
           })
           .lean();
 
@@ -293,7 +384,7 @@ router.post("/google/login", async (req, res) => {
         person = await TherapistHub.findOne({ user: user._id })
           .populate({
             path: "user",
-            select: "accountType email image createdAt",
+            select: "accountType email image createdAt signInType",
           })
           .lean();
 
@@ -302,7 +393,7 @@ router.post("/google/login", async (req, res) => {
       default:
         break;
     }
-    let token = jwt.sign(person, process.env.JWT_PRIVATE_KEY);
+    const token = jwt.sign(person, process.env.JWT_PRIVATE_KEY);
 
     res
       .status(200)
@@ -312,21 +403,44 @@ router.post("/google/login", async (req, res) => {
   }
 });
 
+router.post("/google/account", async (req, res) => {
+  try {
+    const { tokenId } = req.body;
+
+    const { payload } = await client.verifyIdToken({
+      idToken: tokenId,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    if (!payload.email_verified)
+      return res
+        .status(400)
+        .json({ errorMessage: "Email could not be verified" });
+
+    const user = await User.findOne({
+      email: payload.email,
+      signInType: "Google",
+    });
+
+    res.status(200).json({ existing: Boolean(user) });
+  } catch (err) {
+    res.status(500).json({ error: err, errorMessage: "Internal Server Error" });
+  }
+});
+
 router.post("/submit/review", async (req, res) => {
   try {
     const { userId, review, space, rating, bookingId } = req.body;
 
-    console.log("req.body req.body aeadcsdf", req.body);
-    let user = await User.findOne({
+    const user = await User.findOne({
       _id: userId,
     });
-    console.log("user aeadcsdf ", user);
     if (!user)
       return res
         .status(200)
         .json({ message: "User is not present aeadcsdf", error: true });
 
-    let person = await Review.create({
+    const person = await Review.create({
       review: review,
       user: userId,
       space: space,
@@ -334,10 +448,8 @@ router.post("/submit/review", async (req, res) => {
       booking: bookingId,
       flag: false,
     });
-    console.log("person========", person);
 
     await person.save();
-    console.log("person", person);
 
     res
       .status(200)
@@ -349,7 +461,7 @@ router.post("/submit/review", async (req, res) => {
 
 router.get("/all/review", async (req, res) => {
   try {
-    let person = await Review.find()
+    const person = await Review.find()
       .populate([
         { path: "user", select: "email image username" },
         { path: "booking", select: "bookingDate bookingTime userName" },
@@ -357,7 +469,6 @@ router.get("/all/review", async (req, res) => {
       ])
       .lean();
 
-    console.log("person person", person);
     res.status(200).json({ person, message: "all reviews", error: false });
   } catch (err) {
     res.status(400).json({ error: err, errorMessage: "Internal Server Error" });
@@ -365,7 +476,6 @@ router.get("/all/review", async (req, res) => {
 });
 
 router.patch("/update/review", async (req, res) => {
-  console.log("req.bodLLLL", req.body);
   try {
     const { id, approvedata } = req.body;
     const datafind = await Review.findOneAndUpdate(
@@ -385,17 +495,15 @@ router.patch("/update/review", async (req, res) => {
 
 router.post("/singlespace/review", async (req, res) => {
   try {
-    let { spaceName } = req.body;
+    const { spaceName } = req.body;
 
-    console.log("spaceName", req.body);
-    let datareview = await Review.find()
+    const datareview = await Review.find()
       .populate([
         { path: "user", select: "email image username" },
         { path: "space", select: "spaceImage name" },
       ])
       .lean();
 
-    console.log("person person spaceName", datareview);
     res.status(200).json({ datareview, message: "all reviews", error: false });
   } catch (err) {
     res.status(400).json({ error: err, errorMessage: "Internal Server Error" });
@@ -405,23 +513,17 @@ router.post("/singlespace/review", async (req, res) => {
 router.post("/get/review", async (req, res) => {
   try {
     // let { id } = req.params;
-    let { spaceid } = req.body;
-
-    // console.log("id  idid", id);
-
-    let person = await Review.find({ space: spaceid });
-    console.log("person person===", person);
+    const { spaceid } = req.body;
+    const person = await Review.find({ space: spaceid });
     res.status(200).json({ person, message: "all reviews", error: false });
   } catch (err) {
-    console.log("err err===", err);
     res.status(400).json({ error: err, errorMessage: "Internal Server Error" });
   }
 });
 router.post("/update/singlereview", async (req, res) => {
   try {
-    let { id, data } = req.body;
-    console.log("req.body req.body sdsdsdsd hhhhhhhhhhhhh", req.body);
-    let dataget = await Booking.findOneAndUpdate(
+    const { id, data } = req.body;
+    const dataget = await Booking.findOneAndUpdate(
       {
         _id: id,
       },
@@ -429,7 +531,6 @@ router.post("/update/singlereview", async (req, res) => {
         reviewSubmit: true,
       }
     );
-    console.log("dataget dataget hhhhhhhhhhhhh", dataget);
 
     await dataget.save();
     res.status(200).json({
@@ -438,7 +539,6 @@ router.post("/update/singlereview", async (req, res) => {
       // data: dataget,
     });
   } catch (error) {
-    console.log("error", error);
     res.status(500).json({
       Error_Message: error,
     });
@@ -447,18 +547,15 @@ router.post("/update/singlereview", async (req, res) => {
 
 //facebook login
 const facebookLogin1 = async (req, res) => {
-  let { email, username, id, signInType, accountType, image } = req.body;
-  console.log(email, username, id, signInType, accountType);
-  console.log("req.body======", req.body);
+  const { email, username, id, signInType, accountType, image } = req.body;
   let fullname = [];
   fullname = username?.split(" ");
 
   try {
-    let user = await User.findOne({
+    const user = await User.findOne({
       email,
       signInType,
     });
-    console.log("user found", user);
     let token;
     let person = {};
     if (user) {
@@ -479,10 +576,9 @@ const facebookLogin1 = async (req, res) => {
         default:
           break;
       }
-      console.log("person", person);
       token = jwt.sign(person, process.env.JWT_PRIVATE_KEY);
     } else {
-      let userSaved = await User.create({
+      const userSaved = await User.create({
         email: email,
         signInType: signInType,
         accountType,
@@ -521,21 +617,18 @@ const facebookLogin1 = async (req, res) => {
 
     res.status(200).json({ token, message: "You are successfully logged in" });
   } catch (err) {
-    console.log(err);
     res.status(400).json({ error: err, errorMessage: "Internal Server Error" });
   }
 };
 const facebookLogin = async (req, res) => {
-  let { email, username, id, signInType, accountType } = req.body;
-  console.log(email, username, id, signInType, accountType);
+  const { email, username, id, signInType, accountType } = req.body;
   let fullname = [];
   fullname = username?.split(" ");
 
   try {
-    let user = await User.findOne({ uniqueId: id });
+    const user = await User.findOne({ uniqueId: id });
 
     if (!user) {
-      console.log("user", user);
       const newUser = new User({
         email: "Taimor@gamil.com",
         signInType,
@@ -544,7 +637,7 @@ const facebookLogin = async (req, res) => {
         username: fullname[0] + fullname[1],
       });
 
-      let savedUser = await newUser.save();
+      const savedUser = await newUser.save();
       let person;
 
       switch (accountType) {
@@ -554,7 +647,6 @@ const facebookLogin = async (req, res) => {
             lastName: username[1],
             user: savedUser._id,
           });
-          console.log("Therapist ===", Therapist);
           break;
         case "Host":
           person = await TherapistHub.create({
