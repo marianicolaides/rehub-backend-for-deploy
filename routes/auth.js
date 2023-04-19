@@ -246,7 +246,7 @@ router.get("/user", authorizedUser, async (req, res) => {
 
 router.post("/google/signup", async (req, res) => {
   try {
-    const { tokenId, accountType, image } = req.body;
+    const { tokenId, accountType } = req.body;
 
     const { payload } = await client.verifyIdToken({
       idToken: tokenId,
@@ -292,7 +292,7 @@ router.post("/google/signup", async (req, res) => {
       const name = payload.name.split(" ");
       const userSaved = await User.create({
         email: payload.email,
-        image: image,
+        image: payload.picture,
         signInType: "Google",
         accountType,
       });
@@ -341,7 +341,7 @@ router.post("/google/signup", async (req, res) => {
 
 router.post("/google/login", async (req, res) => {
   try {
-    const { tokenId, profile, accountType } = req.body;
+    const { tokenId, accountType } = req.body;
 
     const { payload } = await client.verifyIdToken({
       idToken: tokenId,
@@ -353,53 +353,92 @@ router.post("/google/login", async (req, res) => {
         .status(400)
         .json({ errorMessage: "Email could not be verified" });
 
+
     let user = await User.findOne({
       email: payload.email,
       signInType: "Google",
     });
-    if (!user) {
+
+    let person;
+
+    if (user) {
+      switch (user.accountType) {
+        case "Professional":
+          person = await Therapist.findOne({ user: user._id })
+            .populate({
+              path: "user",
+              select: "accountType email image createdAt signInType",
+            })
+            .lean();
+
+          break;
+        case "Host":
+          person = await TherapistHub.findOne({ user: user._id })
+            .populate({
+              path: "user",
+              select: "accountType email image createdAt signInType",
+            })
+            .lean();
+
+          break;
+
+        default:
+          break;
+      }
+    } else {
       user = await User.create({
         email: payload.email,
         username: payload.name,
-        image: profile.imageUrl,
+        image: payload.picture,
         isValid: true,
         signInType: "Google",
         accountType
       });
+
+      const name = payload.name.split(" ");
+      switch (user.accountType) {
+        case "Professional":
+          await Therapist.create({
+            firstName: name[0],
+            lastName: name[1],
+            user: user._id,
+          });
+          person = await Therapist.findOne({ user: user._id })
+            .populate({
+              path: "user",
+              select: "accountType email image createdAt",
+            })
+            .lean();
+
+          break;
+        case "Host":
+          await TherapistHub.create({
+            firstName: name[0],
+            lastName: name[1],
+            user: user._id,
+          });
+          person = await TherapistHub.findOne({ user: user._id })
+            .populate({
+              path: "user",
+              select: "accountType email image createdAt",
+            })
+            .lean();
+
+          break;
+
+        default:
+          break;
+      }
     }
 
-    let person;
-
-    switch (user.accountType) {
-      case "Professional":
-        person = await Therapist.findOne({ user: user._id })
-          .populate({
-            path: "user",
-            select: "accountType email image createdAt signInType",
-          })
-          .lean();
-
-        break;
-      case "Host":
-        person = await TherapistHub.findOne({ user: user._id })
-          .populate({
-            path: "user",
-            select: "accountType email image createdAt signInType",
-          })
-          .lean();
-
-        break;
-
-      default:
-        break;
-    }
     const token = jwt.sign(person, process.env.JWT_PRIVATE_KEY);
 
     res
       .status(200)
       .json({ token, message: "You are successfully logged in", error: false });
   } catch (err) {
-    res.status(400).json({ error: err, errorMessage: "Internal Server Error" });
+    console.error(err);
+    res.status(500).json({ error: err, errorMessage: "Internal Server Error" });
   }
 });
 
@@ -412,10 +451,11 @@ router.post("/google/account", async (req, res) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    if (!payload.email_verified)
+    if (!payload.email_verified) {
       return res
         .status(400)
         .json({ errorMessage: "Email could not be verified" });
+    }
 
     const user = await User.findOne({
       email: payload.email,
