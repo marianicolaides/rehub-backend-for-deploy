@@ -119,7 +119,7 @@ router.get("/getAll", authorizedUser, async (req, res) => {
   try {
     console.log("req.user =>>>>>>>>>>>>", req.user);
 
-    let dataget = await Booking.find();
+    let dataget = await Booking.find().sort({'bookingDate': -1});
     // console.log("dataget", dataget);
 
     // let datatest = await dataget.map((item) => {
