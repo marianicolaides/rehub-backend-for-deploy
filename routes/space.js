@@ -11,6 +11,8 @@ var router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const { getCheckFilter } = require("../utils/CheckData");
+const { Booking } = require("../models/Book");
+const { convertStringToDate } = require("../utils/convertToDate");
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -88,10 +90,19 @@ router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
 router.delete("/deletespace/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const deleteuser = await Space.findByIdAndDelete({ _id: id });
-    res.status(201).json({ message: "space delete successfully", deleteuser });
+    const bookings = await Booking.find({ spaceId: id });
+    if (bookings.length) {
+      for (let booking of bookings) {
+        if (convertStringToDate(booking.bookingDate).getDate() >= new Date().getDate() ) {
+            return res.status(400).json({ message: "Can't delete space, bookings found"})
+          }
+        }
+      }
+      
+    const deletespace = await Space.findByIdAndDelete({ _id: id });
+    res.status(201).json({ message: "Space delete successfully", deletespace });
   } catch (error) {
-    res.status(422).json({ err, message: "Server error at delete space!" });
+    res.status(422).json({ error, message: "Server error at delete space!" });
   }
 });
 
