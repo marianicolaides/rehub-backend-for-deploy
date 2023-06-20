@@ -17,7 +17,11 @@ const bookingSchema = new mongoose.Schema(
       type: Boolean,
     },
     spaceImage: String,
-    userId: String,
+    // userId: String,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "therapist",
+    },
 
     status: {
       type: String,

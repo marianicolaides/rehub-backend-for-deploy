@@ -7,13 +7,17 @@ const { TherapistHub } = require("../models/therapisthub");
 const { authorizedUser } = require("../middleware/Authorized");
 const { Review } = require("../models/review");
 const router = express.Router();
-
 const { OAuth2Client } = require("google-auth-library");
+const mustache = require("mustache");
+
 const { Booking } = require("../models/Book");
 const { sendMail } = require("../utils/notification.util");
-const ForgotPasswordTemplate = require("../emailTemplates/ForgotPasswordTemplate");
+const SESPasswordReset = require("../emailTemplates/SES_passwordreset.json");
 const VerifySignUpTemplate = require("../emailTemplates/VerifySignUpTemplate");
+const SESConfTemp = require("../emailTemplates/SES_conftemp.json");
 const EmailConstants = require("../emailTemplates/EmailConstants");
+const SESBookingApproveToHost = require("../emailTemplates/SES_bookingapprove_tohost.json");
+const SESBookingApproveToProf = require("../emailTemplates/SES_bookingapprove_toprof.json");
 const env = require("../config");
 const { generateToken, decodeToken } = require("../utils/token.util");
 
@@ -40,7 +44,12 @@ const handleUserDuplication = async (userData) => {
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await User.findOne({ username: { "$regex": `^${username.toLowerCase()}$`, "$options": "i" } });
+    const user = await User.findOne({
+      $or: [
+        { username: { "$regex": `^${username.toLowerCase()}$`, "$options": "i" } },
+        { email: { "$regex": `^${username.toLowerCase()}$`, "$options": "i" } }
+      ]
+    });
 
     if (!user)
       return res.status(400).json({ errorMessage: "User does not exist" });
@@ -93,10 +102,15 @@ router.post("/forgot-password", async (req, res) => {
     const token = generateToken({ id: user._id, email });
     await User.findByIdAndUpdate(user._id, { token });
     const url = `${env.FE_URL}reset-password/${token}`;
-    const mail = ForgotPasswordTemplate
-      .replace(EmailConstants.user, "Dear")
-      .replace(EmailConstants.url, url);
-    await sendMail(email, mail, "Forgot Password");
+
+    let therapist = user;
+    if (user.accountType === "Host") {
+      therapist = await TherapistHub.findOne({ user: user._id });
+    } else {
+      therapist = await Therapist.findOne({ user: user._id });
+    }
+    const mailBody = mustache.render(SESPasswordReset.Template.HtmlPart, { user: `${therapist.firstName} ${therapist.lastName}`, RESET_PASSWORD_LINK: url })
+    await sendMail(email, mailBody, SESPasswordReset.Template.SubjectPart);
 
     res.status(200).send(token);
   } catch (error) {
@@ -158,6 +172,15 @@ router.post("/verify-email", async (req, res) => {
       return res.status(400).json({ message: "Token is not valid" });
 
     await User.findByIdAndUpdate(user._id, { isValid: true, token: "" });
+    let therapist = user;
+    if (user.accountType === "Host") {
+      therapist = await TherapistHub.findOne({ user: user._id });
+    } else {
+      therapist = await Therapist.findOne({ user: user._id });
+    }
+
+    const mailBody = mustache.render(SESConfTemp.Template.HtmlPart, { user: `${therapist.firstName} ${therapist.lastName}` });
+    await sendMail(user.email, mailBody, SESConfTemp.Template.SubjectPart);
 
     res.status(200).send({ message: "Verification is successfully done" });
   } catch (error) {
@@ -175,7 +198,7 @@ router.post("/signup", async (req, res) => {
     if (isDuplication)
       return res.status(400).send({ errorMessage: isDuplication });
 
-    const user = new User({ username, accountType, email, usertype: "simple", isValid: false });
+    const user = new User({ username: name.join(" "), accountType, email, usertype: "simple", isValid: false });
     user.password = await user.encryptPassword(password);
     const userSaved = await user.save();
     const token = generateToken({ id: userSaved._id, email: userSaved.email });
@@ -184,7 +207,7 @@ router.post("/signup", async (req, res) => {
     const mail = VerifySignUpTemplate
       .replace(EmailConstants.user, "Dear")
       .replace(EmailConstants.url, url);
-    await sendMail(email, mail, "Forgot Password");
+    await sendMail(email, mail, "Sign Up");
 
     let person;
 
@@ -515,7 +538,10 @@ router.get("/all/review", async (req, res) => {
   }
 });
 
-router.patch("/update/review", async (req, res) => {
+router.patch(
+  "/update/review",
+  authorizedUser,
+  async (req, res) => {
   try {
     const { id, approvedata } = req.body;
     const datafind = await Review.findOneAndUpdate(
@@ -523,11 +549,55 @@ router.patch("/update/review", async (req, res) => {
       {
         approve: approvedata,
       }
-    );
+    )
+      .populate({
+        path: "user",
+        select: "accountType firstName lastName username email image createdAt signInType",
+      })
+      .populate({
+        path: "booking",
+        select: "_id bookingTime bookingDate",
+      })
+      .populate({
+        path: "booking.userId",
+        select: "_id bookingTime bookingDate",
+      })
+      .lean();
+    const user = datafind.user;
+
+    if (user && approvedata) {
+      let mailBody;
+
+      const authUser = req.user;
+      let therapist;
+      if (user.accountType === "Host") {
+        therapist = await TherapistHub.findOne({ user: user._id });
+        mailBody = mustache.render(SESBookingApproveToProf.Template.HtmlPart, {
+          user: `${authUser.firstName} ${authUser.lastName}`,
+          "HOST NAME": `${therapist.firstName} ${therapist.lastName}`,
+          "BOOKING DATE": therapist.bookingDate,
+          "BOOKING TIME": therapist.bookingTime,
+          booking_receipt_link: `${env.FE_URL}booking?spaceid=${datafind.space}`
+        });
+      } else {
+        therapist = await Therapist.findOne({ user: user._id });
+        mailBody = mustache.render(SESBookingApproveToHost.Template.HtmlPart, {
+          user: `${authUser.firstName} ${authUser.lastName}`,
+          PROFESSIONAL_NAME: `${therapist.firstName} ${therapist.lastName}`,
+          BOOKING_DATE: therapist.bookingDate,
+          BOOKING_TIME: therapist.bookingTime,
+          booking_receipt_link: `${env.FE_URL}booking?spaceid=${datafind.space}`
+        });
+      }
+      if (mailBody) {
+        await sendMail(authUser.user.email, mailBody, SESPasswordReset.Template.SubjectPart);
+      }
+    }
+
     if (!datafind) {
       res.status(400).json({ error: err, errorMessage: "review not found" });
     }
-    res.status(200).json({ message: "Approve Sucessfully", error: false });
+    res.status(200).json({ message: "Approve Successfully", error: false });
   } catch (err) {
     res.status(400).json({ error: err, errorMessage: "Internal Server Error" });
   }
