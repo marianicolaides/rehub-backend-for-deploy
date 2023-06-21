@@ -18,6 +18,10 @@ const SESConfTemp = require("../emailTemplates/SES_conftemp.json");
 const EmailConstants = require("../emailTemplates/EmailConstants");
 const SESBookingApproveToHost = require("../emailTemplates/SES_bookingapprove_tohost.json");
 const SESBookingApproveToProf = require("../emailTemplates/SES_bookingapprove_toprof.json");
+const SESBookingCancelHostToHost = require("../emailTemplates/SES_bookingcancel_byhosttohost.json");
+const SESBookingCancelHostToProf = require("../emailTemplates/SES_bookingcancel_byhosttoprof.json");
+const SESBookingCancelProfToHost = require("../emailTemplates/SES_bookingcancel_byproftohost.json");
+const SESBookingCancelProfToProf = require("../emailTemplates/SES_bookingcancel_byproftoprof.json");
 const env = require("../config");
 const { generateToken, decodeToken } = require("../utils/token.util");
 
@@ -565,32 +569,61 @@ router.patch(
       .lean();
     const user = datafind.user;
 
-    if (user && approvedata) {
-      let mailBody;
+    if (user) {
+      if (approvedata) {
+        let mailBody;
 
-      const authUser = req.user;
-      let therapist;
-      if (user.accountType === "Host") {
-        therapist = await TherapistHub.findOne({ user: user._id });
-        mailBody = mustache.render(SESBookingApproveToProf.Template.HtmlPart, {
-          user: `${authUser.firstName} ${authUser.lastName}`,
-          "HOST NAME": `${therapist.firstName} ${therapist.lastName}`,
-          "BOOKING DATE": therapist.bookingDate,
-          "BOOKING TIME": therapist.bookingTime,
-          booking_receipt_link: `${env.FE_URL}booking?spaceid=${datafind.space}`
-        });
+        const authUser = req.user;
+        let therapist;
+        if (user.accountType === "Host") {
+          therapist = await TherapistHub.findOne({ user: user._id });
+          mailBody = mustache.render(SESBookingApproveToProf.Template.HtmlPart, {
+            user: `${authUser.firstName} ${authUser.lastName}`,
+            "HOST NAME": `${therapist.firstName} ${therapist.lastName}`,
+            "BOOKING DATE": therapist.bookingDate,
+            "BOOKING TIME": therapist.bookingTime,
+            booking_receipt_link: `${env.FE_URL}booking?spaceid=${datafind.space}`
+          });
+        } else {
+          therapist = await Therapist.findOne({ user: user._id });
+          mailBody = mustache.render(SESBookingApproveToHost.Template.HtmlPart, {
+            user: `${authUser.firstName} ${authUser.lastName}`,
+            PROFESSIONAL_NAME: `${therapist.firstName} ${therapist.lastName}`,
+            BOOKING_DATE: therapist.bookingDate,
+            BOOKING_TIME: therapist.bookingTime,
+            booking_receipt_link: `${env.FE_URL}booking?spaceid=${datafind.space}`
+          });
+        }
+        if (mailBody) {
+          await sendMail(authUser.user.email, mailBody, SESPasswordReset.Template.SubjectPart);
+        }
       } else {
-        therapist = await Therapist.findOne({ user: user._id });
-        mailBody = mustache.render(SESBookingApproveToHost.Template.HtmlPart, {
-          user: `${authUser.firstName} ${authUser.lastName}`,
-          PROFESSIONAL_NAME: `${therapist.firstName} ${therapist.lastName}`,
-          BOOKING_DATE: therapist.bookingDate,
-          BOOKING_TIME: therapist.bookingTime,
-          booking_receipt_link: `${env.FE_URL}booking?spaceid=${datafind.space}`
-        });
-      }
-      if (mailBody) {
-        await sendMail(authUser.user.email, mailBody, SESPasswordReset.Template.SubjectPart);
+        let mailBody;
+
+        const authUser = req.user;
+        const isAuthUserHost = authUser.user?.accountType === "Host";
+
+        let therapist;
+        if (user.accountType === "Host") {
+          therapist = await TherapistHub.findOne({ user: user._id });
+          mailBody = mustache.render((isAuthUserHost ? SESBookingCancelHostToProf : SESBookingCancelProfToProf).Template.HtmlPart, {
+            user: `${authUser.firstName} ${authUser.lastName}`,
+            HOST_NAME: `${therapist.firstName} ${therapist.lastName}`,
+            BOOKING_DATE: therapist.bookingDate,
+            BOOKING_TIME: therapist.bookingTime
+          });
+        } else {
+          therapist = await Therapist.findOne({ user: user._id });
+          mailBody = mustache.render((isAuthUserHost ? SESBookingCancelHostToHost : SESBookingCancelProfToHost).Template.HtmlPart, {
+            user: `${authUser.firstName} ${authUser.lastName}`,
+            PROFESSIONAL_NAME: `${therapist.firstName} ${therapist.lastName}`,
+            BOOKING_DATE: therapist.bookingDate,
+            BOOKING_TIME: therapist.bookingTime
+          });
+        }
+        if (mailBody) {
+          await sendMail(authUser.user.email, mailBody, SESPasswordReset.Template.SubjectPart);
+        }
       }
     }
 
