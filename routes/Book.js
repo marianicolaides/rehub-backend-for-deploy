@@ -13,7 +13,7 @@ var router = express.Router();
 router.post("/add", async (req, res) => {
   try {
     const { booking, user } = req.body;
-    let userData = await User.findOne({ _id: user });
+    booking[0].userId = user
     const databooking = await Booking.create(booking);
 
     // await databooking.save();
@@ -187,6 +187,9 @@ router.get("/getBook/:id", async (req, res) => {
         path: "therapisthub",
       },
     });
+
+    const userData = await User.findOne({ _id: dataget[0].userId })
+    dataget[0].userData = userData
 
     res.status(200).json({
       status: true,

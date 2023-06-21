@@ -87,22 +87,15 @@ router.post("/addspace", upload.single("spaceImage"), async (req, res) => {
 
 //delete space
 
-router.delete("/deletespace/:id", async (req, res) => {
+router.patch("/toggleVisiblity/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const bookings = await Booking.find({ spaceId: id });
-    if (bookings.length) {
-      for (let booking of bookings) {
-        if (convertStringToDate(booking.bookingDate).getDate() >= new Date().getDate() ) {
-            return res.status(400).json({ message: "Can't delete space, bookings found"})
-          }
-        }
-      }
-      
-    const deletespace = await Space.findByIdAndDelete({ _id: id });
-    res.status(201).json({ message: "Space delete successfully", deletespace });
+    const space = await Space.findByIdAndUpdate({ _id: id },[
+      { $set: { isActive: { $not: "$isActive" } } }
+    ]);
+    res.status(201).json({ message: `Updated space as ${space.isActive}`, space });
   } catch (error) {
-    res.status(422).json({ error, message: "Server error at delete space!" });
+    res.status(422).json({ error, message: "Server error on making space inactive" });
   }
 });
 
@@ -362,7 +355,7 @@ router.post("/avaiabilty", async (req, res) => {
 
 router.get("/getspaceByUser/:id", async (req, res) => {
   console.log(req.params.id, "req.params.id");
-  Space.find({ therapisthub: req.params.id })
+  Space.find({ therapisthub: req.params.id }).sort({ name: 1 })
     .populate({
       path: "therapisthub",
       select: "firstName lastName",

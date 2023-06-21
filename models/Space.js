@@ -6,6 +6,10 @@ const SpaceSchema = new mongoose.Schema({
   spaceImage: String,
   longitude:String,
   latitude:String,
+  isActive: {
+    default: true,
+    type: Boolean,
+  },
   detailedInformation: {
     default: "",
     type: String,
