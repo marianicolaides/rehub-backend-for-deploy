@@ -188,7 +188,8 @@ router.get("/getBook/:id", async (req, res) => {
       },
     });
 
-    const userData = await User.findOne({ _id: dataget[0].userId })
+    let userData = await Therapist.findOne({ _id: dataget[0].userId })
+    if (!userData) userData = await User.findOne({ _id: dataget[0].userId })
     dataget[0].userData = userData
 
     res.status(200).json({
