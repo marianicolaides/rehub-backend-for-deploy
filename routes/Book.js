@@ -179,8 +179,7 @@ router.get("/getBook/:id", async (req, res) => {
     // console.log("");
 
     let dataget = await Booking.find({
-      bookingInvoiceNumber: req.params.id,
-      paymentStatus: "Paid",
+      bookingInvoiceNumber: req.params.id
     }).populate({
       path: "spaceId",
       populate: {
@@ -190,6 +189,7 @@ router.get("/getBook/:id", async (req, res) => {
 
     let userData = await Therapist.findOne({ _id: dataget[0].userId })
     if (!userData) userData = await User.findOne({ _id: dataget[0].userId })
+    if (!userData) userData = await TherapistHub.findOne({ _id: dataget[0].userId })
     dataget[0].userData = userData
 
     res.status(200).json({
