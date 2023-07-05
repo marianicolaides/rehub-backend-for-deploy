@@ -456,26 +456,38 @@ router.post("/checkbooking/exist", async (req, res) => {
 router.patch("/updatebooking", async (req, res) => {
   try {
     // console.log("req.body  ==== ", req.body);
-    const { datatest } = req.body;
+    const  datatest = req.body;
     let data = null;
-    let remove = null;
+   
+    data = await Booking.findByIdAndUpdate(
+      { _id: datatest._id },
+      {
+        status: datatest.status,
+        paymentStatus: datatest.paymentStatus
+      }
+    );
 
-    for (let i = 0; i < datatest.length; i++) {
-      data = await Booking.findByIdAndUpdate(
-        { _id: datatest[i]._id },
-        {
-          status: datatest[i].status,
-        }
-      );
+    let dataget = await Booking.find({
+      bookingInvoiceNumber: datatest.bookingInvoiceNumber
+    }).populate({
+      path: "spaceId",
+      populate: {
+        path: "therapisthub",
+      },
+    });
+
+    let userData = await Therapist.findOne({ _id: dataget[0].userId })
+    if (!userData) userData = await User.findOne({ _id: dataget[0].userId })
+    if (!userData) userData = await TherapistHub.findOne({ _id: dataget[0].userId })
+    dataget[0].userData = userData
 
       // console.log("data data == ", data);
-    }
 
     await data.save();
     res.status(200).json({
       status: true,
       message: "Updated Sucessfully",
-      // data: dataget,
+      data: dataget,
     });
 
     // for (let j = 0; j < dupilicated?.length; j++) {
