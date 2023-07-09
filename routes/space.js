@@ -304,13 +304,13 @@ router.get("/getspace/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const spaceIndvidual = await Space.findById({ _id: id }).populate([
-      {
-        path: "therapisthub",
-        select: "firstName lastName",
-      },
-      { path: "scheduleTimeSlot" }
-    ]);
+    const spaceIndvidual = await Space.findById({ _id: id }).populate({
+      path: "therapisthub",
+      populate: {
+        path: "user",
+        select: "image email createdAt"
+      }
+    })
 
     res.status(201).json({
       status: true,
