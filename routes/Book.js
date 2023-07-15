@@ -8,13 +8,29 @@ const { User } = require("../models/user");
 const { CheckDataIs } = require("../utils/CheckData");
 var cron = require("node-cron");
 const { authorizedUser } = require("../middleware/Authorized");
+const { Receipt } = require("../models/Receipt");
 var router = express.Router();
 
 router.post("/add", async (req, res) => {
   try {
-    const { booking, user } = req.body;
+    const { booking, user, pfee } = req.body;
     booking[0].userId = user
+    const activeBookingsCount = booking.length
+    const spaceRental = activeBookingsCount * booking[0].spacePrice
+    const invoiceNumber = booking[0].bookingInvoiceNumber
+    const rehubFee = activeBookingsCount * pfee
+    const VATonPlatformFee = Number((booking.length * (pfee * 0.19)).toFixed(2))
+    const receipt = await Receipt.create({
+      invoiceNumber: invoiceNumber,
+      userId: user,
+      spaceId: booking[0].spaceId,
+      rehubFee: rehubFee,
+      spaceRental: spaceRental,
+      VATonPlatformFee: VATonPlatformFee,
+    })
     const databooking = await Booking.create(booking);
+    const rec = await Receipt.find()
+    const t = rec
 
     // await databooking.save();
 
@@ -186,6 +202,19 @@ router.get("/getBook/:id", async (req, res) => {
         path: "therapisthub",
       },
     });
+
+    const receiptData = await Receipt.find({
+      invoiceNumber: req.params.id
+    })
+
+    if (receiptData.length) {
+      dataget[0].receiptDetails = {
+        spaceRental: receiptData[0].spaceRental,
+        rehubFee: receiptData[0].rehubFee,
+        VATonPlatformFee: receiptData[0].VATonPlatformFee,
+        total: receiptData[0].spaceRental + receiptData[0].rehubFee + receiptData[0].VATonPlatformFee
+      }
+    }
 
     let userData = await Therapist.findOne({ _id: dataget[0].userId })
     if (!userData) userData = await User.findOne({ _id: dataget[0].userId })
