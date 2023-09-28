@@ -5,10 +5,13 @@ const { User } = require("../models/user");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const fs = require('fs-extra');
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/uploads");
+    const path = "public/uploads";
+    fs.mkdirsSync(path);
+    cb(null, path);
   },
   filename: function (req, file, cb) {
     cb(

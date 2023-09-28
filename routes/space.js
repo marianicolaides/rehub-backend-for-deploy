@@ -13,10 +13,13 @@ const path = require("path");
 const { getCheckFilter } = require("../utils/CheckData");
 const { Booking } = require("../models/Book");
 const { convertStringToDate } = require("../utils/convertToDate");
+const fs = require("fs-extra");
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/uploads");
+    const path = "public/uploads";
+    fs.mkdirsSync(path);
+    cb(null, path);
   },
   filename: function (req, file, cb) {
     cb(
