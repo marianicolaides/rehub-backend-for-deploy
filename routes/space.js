@@ -111,7 +111,6 @@ router.patch(
     try {
       const { id } = req.params;
 
-      console.log("=>>>>>>>>>>", req.body);
       const checkSpaceExist = await Space.find({ _id: id });
       if (req.file) {
         const updatespace = await Space.findByIdAndUpdate(
@@ -313,7 +312,9 @@ router.get("/getspace/:id", async (req, res) => {
         path: "user",
         select: "image email createdAt"
       }
-    })
+    }).populate({
+      path: "scheduleTimeSlot",
+    });
 
     res.status(201).json({
       status: true,
