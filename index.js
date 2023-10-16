@@ -65,7 +65,7 @@ app.use("/api/therapisthub", therapistHubRouter);
 app.use("/api/space", addSpaceRouter);
 app.use("/api", PaymentGatewayRouter);
 app.use("/api/content", content);
-app.use("/", receiptContent)
+app.use("/api", receiptContent)
 app.use("/api/booking", Booking);
 
 // app.use(function (req, res, next) {
