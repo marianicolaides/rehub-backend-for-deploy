@@ -19,8 +19,7 @@ router.all('/receipt/:id', (req, res) => {
         console.error(error)
         res.status(500).send('Internal server error')
       } else {
-
-        res.redirect(`${FE_URL}/receipt/${req.params.id}`)
+        res.redirect(`${FE_URL}receipt/${req.params.id}`)
       }
     })
   })
